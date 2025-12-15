@@ -182,37 +182,46 @@ function WeeklyTimetable({ schedule }) {
             ))}
           </div>
 
-          {timetableData.days.map((day, dayIndex) => (
-            <div key={day} className="day-column">
-              <div className="day-header">{timetableData.dayLabels[dayIndex]}</div>
-              <div className="day-slots">
-                {timetableData.byDay[day].map((session, idx) => {
-                  const start = timeToMinutes(session.startTime);
-                  const end = timeToMinutes(session.endTime);
-                  const top = ((start - timetableData.minTime) / 60) * 60; // 60px per hour
-                  const height = ((end - start) / 60) * 60;
+          {timetableData.days.map((day, dayIndex) => {
+            const totalHeight = timetableData.hours.length * 60; // 60px per hour slot
+            
+            return (
+              <div key={day} className="day-column">
+                <div className="day-header">{timetableData.dayLabels[dayIndex]}</div>
+                <div className="day-slots" style={{ height: `${totalHeight}px` }}>
+                  {timetableData.byDay[day].map((session, idx) => {
+                    const start = timeToMinutes(session.startTime);
+                    const end = timeToMinutes(session.endTime);
+                    
+                    // Round to nearest 30 minutes
+                    const roundToNearest30 = (minutes) => Math.round(minutes / 30) * 30;
+                    const roundedStart = roundToNearest30(start);
+                    const roundedEnd = roundToNearest30(end);
+                    
+                    const top = ((roundedStart - timetableData.minTime) / 60) * 60; // 60px per hour
+                    const height = ((roundedEnd - roundedStart) / 60) * 60;
 
-                  return (
-                    <div
-                      key={idx}
-                      className="session-block"
-                      style={{
-                        top: `${top}px`,
-                        height: `${height}px`
-                      }}
-                    >
-                      <div className="session-code">{session.courseCode}</div>
-                      <div className="session-section">{session.section}</div>
-                      <div className="session-time">
-                        {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                    return (
+                      <div
+                        key={idx}
+                        className="session-block"
+                        style={{
+                          top: `${top}px`,
+                          height: `${height}px`
+                        }}
+                      >
+                        <div className="session-code">{session.courseCode}</div>
+                        <div className="session-section">{session.section} · {session.venue}</div>
+                        <div className="session-time">
+                          {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                        </div>
                       </div>
-                      <div className="session-venue">{session.venue}</div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

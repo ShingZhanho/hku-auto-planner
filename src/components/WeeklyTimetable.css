@@ -73,6 +73,24 @@
 .time-column {
   width: 80px;
   flex-shrink: 0;
+  position: relative;
+}
+
+.time-column::after {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #eee 0px,
+    #eee 1px,
+    transparent 1px,
+    transparent 60px
+  );
+  pointer-events: none;
 }
 
 .time-header {
@@ -84,10 +102,12 @@
   height: 60px;
   display: flex;
   align-items: flex-start;
-  padding: 0.25rem 0.5rem;
+  padding-top: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
   font-size: 0.85rem;
   color: #666;
-  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
 }
 
 .day-column {
@@ -110,7 +130,26 @@
 
 .day-slots {
   position: relative;
-  height: fit-content;
+  box-sizing: border-box;
+}
+
+/* Add grid lines that match time slots exactly */
+.day-slots::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #eee 0,
+    #eee 1px,
+    transparent 1px,
+    transparent 60px
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .session-block {
@@ -120,28 +159,32 @@
   background-color: #e7f3ff;
   border: 1px solid #007bff;
   border-radius: 4px;
-  padding: 0.4rem;
+  padding: 0.25rem 0.4rem;
   font-size: 0.75rem;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  z-index: 1;
 }
 
 .session-code {
   font-weight: 600;
   color: #007bff;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
+  line-height: 1.2;
 }
 
 .session-section {
   font-size: 0.7rem;
   color: #666;
-  margin-bottom: 0.2rem;
+  line-height: 1.2;
+  margin-bottom: 0.1rem;
 }
 
 .session-time {
   font-size: 0.7rem;
   color: #333;
-  margin-bottom: 0.2rem;
+  line-height: 1.2;
 }
 
 .session-venue {
