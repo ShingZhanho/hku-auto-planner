@@ -267,8 +267,9 @@ export const hasSectionConflict = (section1Sessions, section2Sessions) => {
  * 4. Permutate dual-semester courses across both semesters
  * 5. For each semester distribution, try all subclass combinations
  * 6. Check for time conflicts within each semester
+ * 7. Filter out schedules that clash with blockouts
  */
-export const generateSchedules = (selectedCourses, groupedData, availableTerms = []) => {
+export const generateSchedules = (selectedCourses, groupedData, availableTerms = [], blockouts = []) => {
   if (selectedCourses.length === 0) return { schedules: [], plans: [], availableTerms: [] };
   
   const MAX_COURSES_PER_SEMESTER = 6;
@@ -329,9 +330,11 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     }
   });
   
-  console.log('Only Sem 1 (based on selected sections):', onlySem1.map(c => c.code).join(', '));
-  console.log('Only Sem 2 (based on selected sections):', onlySem2.map(c => c.code).join(', '));
-  console.log('Both Semesters (based on selected sections):', bothSemesters.map(c => c.code).join(', '));
+  if (import.meta.env.DEV) {
+    console.log('Only Sem 1 (based on selected sections):', onlySem1.map(c => c.code).join(', '));
+    console.log('Only Sem 2 (based on selected sections):', onlySem2.map(c => c.code).join(', '));
+    console.log('Both Semesters (based on selected sections):', bothSemesters.map(c => c.code).join(', '));
+  }
   
   // Step 2: Check if single-semester courses already exceed limit
   if (onlySem1.length > MAX_COURSES_PER_SEMESTER) {
@@ -348,8 +351,10 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   const sem1Slots = MAX_COURSES_PER_SEMESTER - onlySem1.length;
   const sem2Slots = MAX_COURSES_PER_SEMESTER - onlySem2.length;
   
-  console.log(`Sem 1: ${onlySem1.length} fixed courses, ${sem1Slots} slots remaining`);
-  console.log(`Sem 2: ${onlySem2.length} fixed courses, ${sem2Slots} slots remaining`);
+  if (import.meta.env.DEV) {
+    console.log(`Sem 1: ${onlySem1.length} fixed courses, ${sem1Slots} slots remaining`);
+    console.log(`Sem 2: ${onlySem2.length} fixed courses, ${sem2Slots} slots remaining`);
+  }
   
   if (bothSemesters.length > sem1Slots + sem2Slots) {
     console.error(`❌ IMPOSSIBLE: ${bothSemesters.length} flexible courses need ${bothSemesters.length} slots, but only ${sem1Slots + sem2Slots} slots available`);
@@ -434,7 +439,7 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     const sem2CoursesWithSections = prepareSemesterCourses(sem2Courses, term2);
     
     // Generate all subclass combinations for a semester
-    const generateSemesterCombinations = (courses, semesterName) => {
+    const generateSemesterCombinations = (courses, semesterName, semesterBlockouts) => {
       const combinations = [];
       
       const generate = (index, currentSchedule) => {
@@ -461,6 +466,33 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
             if (hasConflict) break;
           }
           
+          // Check for blockout conflicts in this semester
+          if (!hasConflict && semesterBlockouts.length > 0) {
+            for (const courseItem of currentSchedule) {
+              for (const session of courseItem.sessions) {
+                for (const blockout of semesterBlockouts) {
+                  // Check if session day matches blockout day
+                  const dayKey = blockout.day;
+                  if (session.days[dayKey] && session.days[dayKey].trim() !== '') {
+                    // Parse blockout times
+                    const blockoutStart = timeToMinutes(blockout.startTime);
+                    const blockoutEnd = timeToMinutes(blockout.endTime);
+                    const sessionStart = timeToMinutes(session.startTime);
+                    const sessionEnd = timeToMinutes(session.endTime);
+                    
+                    // Check for time overlap
+                    if (sessionStart < blockoutEnd && blockoutStart < sessionEnd) {
+                      hasConflict = true;
+                      break;
+                    }
+                  }
+                }
+                if (hasConflict) break;
+              }
+              if (hasConflict) break;
+            }
+          }
+          
           if (!hasConflict) {
             combinations.push(currentSchedule);
           }
@@ -470,7 +502,9 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
         const course = courses[index];
         for (const sectionData of course.sections) {
           if (!sectionData || !sectionData.sessions) {
-            console.error('Invalid section data:', { course: course.courseCode, sectionData });
+            if (import.meta.env.DEV) {
+              console.error('Invalid section data:', { course: course.courseCode, sectionData });
+            }
             continue;
           }
           generate(index + 1, [
@@ -495,8 +529,17 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
       return combinations;
     };
     
-    const sem1Combinations = generateSemesterCombinations(sem1CoursesWithSections, 'Sem 1');
-    const sem2Combinations = generateSemesterCombinations(sem2CoursesWithSections, 'Sem 2');
+    // Filter blockouts for each semester
+    // Default to 'both' for blockouts without applyTo field (backwards compatibility)
+    const sem1Blockouts = blockouts.filter(b => !b.applyTo || b.applyTo === 'both' || b.applyTo === 'sem1');
+    const sem2Blockouts = blockouts.filter(b => !b.applyTo || b.applyTo === 'both' || b.applyTo === 'sem2');
+    
+    if (import.meta.env.DEV) {
+      console.log(`Blockouts: ${sem1Blockouts.length} for Sem 1, ${sem2Blockouts.length} for Sem 2`);
+    }
+    
+    const sem1Combinations = generateSemesterCombinations(sem1CoursesWithSections, 'Sem 1', sem1Blockouts);
+    const sem2Combinations = generateSemesterCombinations(sem2CoursesWithSections, 'Sem 2', sem2Blockouts);
     
     // Combine Sem 1 and Sem 2 schedules into complete plans
     sem1Combinations.forEach(sem1Schedule => {
@@ -510,13 +553,15 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   // Start the generation process
   generateDistributions(0, [], []);
   
-  console.log('\n=== SCHEDULE GENERATION COMPLETE ===');
-  console.log('Statistics:', {
-    distributionsTested,
-    subclassCombinationsTested,
-    conflictRejections,
-    validSchedules: results.length
-  });
+  if (import.meta.env.DEV) {
+    console.log('\n=== SCHEDULE GENERATION COMPLETE ===');
+    console.log('Statistics:', {
+      distributionsTested,
+      subclassCombinationsTested,
+      conflictRejections,
+      validSchedules: results.length
+    });
+  }
   
   // Filter out schedules that don't include all selected courses
   const expectedCourseCount = selectedCourses.length;
@@ -525,23 +570,25 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     return uniqueCourses.size === expectedCourseCount;
   });
   
-  if (completeSchedules.length < results.length) {
+  if (import.meta.env.DEV && completeSchedules.length < results.length) {
     console.log(`Filtered out ${results.length - completeSchedules.length} incomplete schedules`);
   }
   
   if (completeSchedules.length === 0) {
-    console.error('❌ No valid schedules found!');
-    if (results.length > 0) {
-      console.error('All generated schedules were missing some courses. This may be because some courses have no valid sections in certain semesters.');
-    } else {
-      console.error('This means all subclass combinations had time conflicts.');
+    if (import.meta.env.DEV) {
+      console.error('❌ No valid schedules found!');
+      if (results.length > 0) {
+        console.error('All generated schedules were missing some courses. This may be because some courses have no valid sections in certain semesters.');
+      } else {
+        console.error('This means all subclass combinations had time conflicts.');
+      }
     }
-  } else {
+  } else if (import.meta.env.DEV) {
     console.log(`✅ Found ${completeSchedules.length} complete schedule(s)`);
     console.log('First schedule:', completeSchedules[0].map(c => `${c.courseCode}-${c.section} (${c.term})`).join(', '));
   }
   
-  // Sort complete schedules to prioritize balanced schedules
+  // Sort schedules to prioritize balanced schedules
   completeSchedules.sort((a, b) => {
     const getSemesterCounts = (schedule) => {
       const counts = {};
@@ -635,8 +682,10 @@ export const isSessionInWeek = (session, weekStart, weekEnd) => {
  * Process raw data into structured course information
  */
 export const processCoursesData = (rawData) => {
-  console.log('Processing raw data, total rows:', rawData.length);
-  console.log('Sample raw row:', rawData[0]);
+  if (import.meta.env.DEV) {
+    console.log('Processing raw data, total rows:', rawData.length);
+    console.log('Sample raw row:', rawData[0]);
+  }
   
   // Filter courses
   const filtered = filterCourses(rawData);

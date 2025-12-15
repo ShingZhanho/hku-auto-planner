@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
-function WeeklyTimetable({ schedule, availableSemesters = [] }) {
+function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) {
   // Count courses per semester
   const semesterCounts = useMemo(() => {
     const counts = {};
@@ -88,11 +88,11 @@ function WeeklyTimetable({ schedule, availableSemesters = [] }) {
     days.forEach(day => {
       byDay[day] = weekSessions.filter(s => s.days && s.days[day] && s.days[day].trim() !== '');
     });
-    
-    console.log('Sessions grouped by day:', byDay);
-    console.log('Time range:', { minTime, maxTime, hours });
-    
-    return { days, dayLabels, hours, byDay, minTime, maxTime };
+
+    if (import.meta.env.DEV) {
+      console.log('Sessions grouped by day:', byDay);
+      console.log('Time range:', { minTime, maxTime, hours });
+    }    return { days, dayLabels, hours, byDay, minTime, maxTime };
   }, [weekSessions]);
 
   const formatTimeLabel = (minutes) => {
@@ -204,10 +204,42 @@ function WeeklyTimetable({ schedule, availableSemesters = [] }) {
           {timetableData.days.map((day, dayIndex) => {
             const totalHeight = timetableData.hours.length * 60; // 60px per hour slot
             
+            // Filter blockouts for this day
+            const dayBlockouts = blockouts.filter(b => b.day === day);
+            
             return (
               <div key={day} className="day-column">
                 <div className="day-header">{timetableData.dayLabels[dayIndex]}</div>
                 <div className="day-slots" style={{ height: `${totalHeight}px` }}>
+                  {/* Render blockouts */}
+                  {dayBlockouts.map((blockout, idx) => {
+                    const start = timeToMinutes(blockout.startTime);
+                    const end = timeToMinutes(blockout.endTime);
+                    
+                    const top = ((start - timetableData.minTime) / 60) * 60; // 60px per hour
+                    const height = ((end - start) / 60) * 60;
+
+                    return (
+                      <div
+                        key={`blockout-${idx}`}
+                        className="session-block blockout-block"
+                        style={{
+                          top: `${top}px`,
+                          height: `${height}px`,
+                          backgroundColor: '#e9d5ff',
+                          borderColor: '#7c3aed',
+                          zIndex: 0
+                        }}
+                      >
+                        <div className="session-code" style={{ color: '#7c3aed' }}>{blockout.name}</div>
+                        <div className="session-time" style={{ color: '#7c3aed' }}>
+                          {blockout.startTime} - {blockout.endTime}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Render course sessions */}
                   {timetableData.byDay[day].map((session, idx) => {
                     const start = timeToMinutes(session.startTime);
                     const end = timeToMinutes(session.endTime);

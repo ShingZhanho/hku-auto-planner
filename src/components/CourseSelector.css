@@ -142,6 +142,11 @@
   margin-bottom: 1rem;
 }
 
+.cart-blockout-item {
+  background-color: #faf5ff;
+  border-color: #7c3aed;
+}
+
 .cart-item-header {
   display: flex;
   justify-content: space-between;

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import './CourseSelector.css';
 
-function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove }) {
+function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCourse, setExpandedCourse] = useState(null);
 
@@ -240,7 +240,38 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         </div>
 
         <div className="cart-content">
-          {selectedCourses.length === 0 ? (
+          {/* Display blockouts first */}
+          {blockouts.map(blockout => {
+            // Default to 'both' for backwards compatibility
+            const applyTo = blockout.applyTo || 'both';
+            const applyToDisplay = applyTo === 'both' 
+              ? 'Both Semesters' 
+              : applyTo === 'sem1' 
+                ? 'Semester 1' 
+                : 'Semester 2';
+            
+            return (
+              <div key={blockout.id} className="cart-item cart-blockout-item">
+                <div className="cart-item-header">
+                  <div className="cart-course-info">
+                    <div className="cart-course-code" style={{ color: '#7c3aed' }}>{blockout.name}</div>
+                    <div className="cart-course-term" style={{ fontSize: '0.85rem' }}>
+                      {blockout.day.charAt(0).toUpperCase() + blockout.day.slice(1)} · {blockout.startTime} - {blockout.endTime} · {applyToDisplay}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onRemoveBlockout(blockout.id)}
+                    className="cart-delete-btn"
+                    title="Remove blockout"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          
+          {selectedCourses.length === 0 && blockouts.length === 0 ? (
             <div className="cart-empty">
               No courses selected yet.<br />
               Search and select courses to add them here.

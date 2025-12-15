@@ -1,0 +1,134 @@
+.blockout-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.blockout-modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.blockout-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid #ddd;
+}
+
+.blockout-modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.blockout-modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.blockout-modal-close:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.blockout-form {
+  padding: 1.5rem;
+}
+
+.blockout-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.blockout-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.blockout-form-group input,
+.blockout-form-group select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.blockout-form-group input:focus,
+.blockout-form-group select:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.blockout-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.blockout-form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.blockout-btn-cancel,
+.blockout-btn-add {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.blockout-btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.blockout-btn-cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.blockout-btn-add {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.blockout-btn-add:hover {
+  background-color: #6d28d9;
+}
+
+.blockout-btn-add:active {
+  background-color: #5b21b6;
+}

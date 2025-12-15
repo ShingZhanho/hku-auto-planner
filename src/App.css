@@ -162,6 +162,26 @@
   background-color: #5a6268;
 }
 
+.blockout-button {
+  background-color: #7c3aed;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.blockout-button:hover {
+  background-color: #6d28d9;
+}
+
+.blockout-button:active {
+  background-color: #5b21b6;
+}
+
 .error-message {
   position: fixed;
   bottom: 80px;

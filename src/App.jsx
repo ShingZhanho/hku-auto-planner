@@ -5,6 +5,7 @@ import CourseSelector from './components/CourseSelector'
 import LoadingSpinner from './components/LoadingSpinner'
 import SolutionsList from './components/SolutionsList'
 import WeeklyTimetable from './components/WeeklyTimetable'
+import BlockoutModal from './components/BlockoutModal'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
   const [solutions, setSolutions] = useState(null);
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [blockouts, setBlockouts] = useState([]);
+  const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -32,17 +35,21 @@ function App() {
   const handleDataLoaded = (data) => {
     setCourseData(data);
     
-    console.log('Raw data sample:', data.json.slice(0, 3));
+    if (import.meta.env.DEV) {
+      console.log('Raw data sample:', data.json.slice(0, 3));
+    }
     
     // Process the data
     const processed = processCoursesData(data.json);
     setProcessedData(processed);
     
-    console.log('Course data loaded and processed');
-    console.log('Total courses:', processed.totalCourses);
-    console.log('Total sessions:', processed.totalSessions);
-    console.log('Sample courses:', processed.courses.slice(0, 10));
-    console.log('All course codes:', processed.courses.map(c => c.courseCode));
+    if (import.meta.env.DEV) {
+      console.log('Course data loaded and processed');
+      console.log('Total courses:', processed.totalCourses);
+      console.log('Total sessions:', processed.totalSessions);
+      console.log('Sample courses:', processed.courses.slice(0, 10));
+      console.log('All course codes:', processed.courses.map(c => c.courseCode));
+    }
   };
 
   const handleCourseSelect = (course, selectedSections) => {
@@ -58,6 +65,16 @@ function App() {
   const handleCourseRemove = (courseCode) => {
     setSelectedCourses(prev => prev.filter(c => c.courseCode !== courseCode));
     setErrorMessage(''); // Clear error when user makes changes
+  };
+
+  const handleAddBlockout = (blockout) => {
+    setBlockouts(prev => [...prev, blockout]);
+    setErrorMessage('');
+  };
+
+  const handleRemoveBlockout = (blockoutId) => {
+    setBlockouts(prev => prev.filter(b => b.id !== blockoutId));
+    setErrorMessage('');
   };
 
   const handleSolve = () => {
@@ -96,16 +113,18 @@ function App() {
           firstSectionSessions: processedData.grouped[key].sections[Object.keys(processedData.grouped[key].sections)[0]]
         })));
         
-        const result = generateSchedules(selectedCourses, processedData.grouped, processedData.availableTerms);
+        const result = generateSchedules(selectedCourses, processedData.grouped, processedData.availableTerms, blockouts);
         
         console.log(`Generated ${result.schedules.length} possible schedules`);
         console.log(`Total plans: ${result.plans.length}`);
+        console.log(`Blockouts:`, blockouts);
         
         if (result.schedules.length === 0) {
           setErrorMessage(
             'No possible schedule found with the selected courses and subclasses. ' +
             'Please try selecting more subclasses or changing your course selection.'
           );
+          setTimeout(() => setErrorMessage(''), 5000);
           setSolutions(null);
         } else {
           setSolutions(result);
@@ -113,8 +132,11 @@ function App() {
           setErrorMessage('');
         }
       } catch (error) {
-        console.error('Error generating schedules:', error);
+        if (import.meta.env.DEV) {
+          console.error('Error generating schedules:', error);
+        }
         setErrorMessage('An error occurred while generating schedules. Please try again.');
+        setTimeout(() => setErrorMessage(''), 5000);
         setSolutions(null);
       } finally {
         setIsLoading(false);
@@ -146,7 +168,9 @@ function App() {
     
     setSelectedCourses(coursesWithSections);
     setErrorMessage('');
-    console.log('Debug courses loaded:', coursesWithSections.map(c => c.courseCode));
+    if (import.meta.env.DEV) {
+      console.log('Debug courses loaded:', coursesWithSections.map(c => c.courseCode));
+    }
   };
 
   return (
@@ -185,6 +209,8 @@ function App() {
               selectedCourses={selectedCourses}
               onCourseSelect={handleCourseSelect}
               onCourseRemove={handleCourseRemove}
+              blockouts={blockouts}
+              onRemoveBlockout={handleRemoveBlockout}
             />
             {errorMessage && (
               <div className="error-message">
@@ -204,6 +230,7 @@ function App() {
             <WeeklyTimetable 
               schedule={selectedPlanIndex !== null ? solutions.plans[selectedPlanIndex].courses : []}
               availableSemesters={solutions.availableTerms || []}
+              blockouts={blockouts}
             />
           </div>
         )}
@@ -211,12 +238,19 @@ function App() {
 
       {processedData && !solutions && (
         <footer className="App-footer">
-          <button className="debug-button" onClick={loadDebugCourses}>
-            Load Debug Courses
-          </button>
-          <button className="solve-button" onClick={handleSolve}>
-            Solve
-          </button>
+          {import.meta.env.DEV && (
+            <button className="debug-button" onClick={loadDebugCourses}>
+              Load Debug Courses
+            </button>
+          )}
+          <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+            <button className="blockout-button" onClick={() => setIsBlockoutModalOpen(true)}>
+              Add Blockout
+            </button>
+            <button className="solve-button" onClick={handleSolve}>
+              Solve
+            </button>
+          </div>
         </footer>
       )}
 
@@ -276,6 +310,13 @@ function App() {
       )}
 
       {isLoading && <LoadingSpinner />}
+      
+      <BlockoutModal
+        isOpen={isBlockoutModalOpen}
+        onClose={() => setIsBlockoutModalOpen(false)}
+        onAdd={handleAddBlockout}
+        availableTerms={solutions?.availableTerms || []}
+      />
         </>
       )}
     </div>

@@ -169,6 +169,18 @@
   z-index: 1;
 }
 
+.blockout-block {
+  background-color: #e9d5ff;
+  border-color: #7c3aed;
+  opacity: 0.8;
+  z-index: 0;
+}
+
+.blockout-block .session-code,
+.blockout-block .session-time {
+  color: #7c3aed;
+}
+
 .session-code {
   font-weight: 600;
   color: #007bff;
