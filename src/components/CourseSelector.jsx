@@ -64,52 +64,50 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
     return selected.selectedSections.includes(section);
   };
 
+  const handleToggleSection = (courseCode, section) => {
+    const course = selectedCourses.find(c => c.courseCode === courseCode);
+    if (!course) return;
+
+    const currentSections = Array.isArray(course.selectedSections) 
+      ? course.selectedSections 
+      : [];
+
+    let newSections;
+    if (currentSections.includes(section)) {
+      newSections = currentSections.filter(s => s !== section);
+      if (newSections.length === 0) {
+        onCourseRemove(courseCode);
+        return;
+      }
+    } else {
+      newSections = [...currentSections, section];
+    }
+
+    const fullCourse = coursesData.courses.find(c => c.courseCode === courseCode);
+    onCourseSelect(fullCourse, newSections);
+  };
+
   return (
     <div className="course-selector">
-      <div className="selector-header">
-        <h2>Select Your Courses</h2>
-        <p className="info-text">
-          Showing {coursesData.totalCourses} undergraduate courses (Sem 1 & 2 only, excluding FY courses)
-        </p>
-      </div>
+      <div className="left-panel">
+        <div className="selector-header">
+          <h2>Search Courses</h2>
+          <p className="info-text">
+            {coursesData.totalCourses} courses available
+          </p>
+        </div>
 
-      <div className="search-box">
-        <input
-          type="text"
-          placeholder="Search by course code (e.g., COMP1234, ECON)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
-      </div>
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search by course code (e.g., COMP1234, ECON)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
 
-      <div className="selected-courses-summary">
-        <h3>Selected Courses: {selectedCourses.length}</h3>
-        {selectedCourses.length > 0 && (
-          <div className="selected-list">
-            {selectedCourses.map(course => (
-              <div key={course.courseCode} className="selected-item">
-                <span className="selected-code">{course.courseCode}</span>
-                <span className="selected-section">
-                  {Array.isArray(course.selectedSections) 
-                    ? course.selectedSections.length === course.sections?.length
-                      ? '(All sections)'
-                      : `Sections: ${course.selectedSections.join(', ')}`
-                    : 'Unknown'}
-                </span>
-                <button
-                  onClick={() => onCourseRemove(course.courseCode)}
-                  className="remove-btn"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="courses-list">
+        <div className="courses-list">
         {filteredCourses.map(course => {
           const selected = isSelected(course.courseCode);
           const isExpanded = expandedCourse?.courseCode === course.courseCode;
@@ -182,7 +180,96 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
             No courses found matching "{searchTerm}"
           </div>
         )}
+        </div>
       </div>
+
+      <div className="right-panel">
+        <div className="shopping-cart">
+        <div className="cart-header">
+          <h2>Shopping Cart</h2>
+          <p className="cart-count">{selectedCourses.length} course(s) selected</p>
+        </div>
+
+        <div className="cart-content">
+          {selectedCourses.length === 0 ? (
+            <div className="cart-empty">
+              No courses selected yet.<br />
+              Search and select courses to add them here.
+            </div>
+          ) : (
+            selectedCourses.map(course => {
+              const sectionsByTerm = {};
+              const allSections = course.sections || [];
+              
+              allSections.forEach(section => {
+                const sectionData = coursesData.grouped[course.courseCode]?.sections[section];
+                const term = sectionData?.[0]?.term || 'Unknown';
+                if (!sectionsByTerm[term]) {
+                  sectionsByTerm[term] = [];
+                }
+                sectionsByTerm[term].push(section);
+              });
+
+              return (
+                <div key={course.courseCode} className="cart-item">
+                  <div className="cart-item-header">
+                    <div className="cart-course-info">
+                      <div className="cart-course-code">{course.courseCode}</div>
+                      <div className="cart-course-term">{course.courseTitle}</div>
+                    </div>
+                    <button
+                      onClick={() => onCourseRemove(course.courseCode)}
+                      className="cart-delete-btn"
+                      title="Remove course"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="cart-sections">
+                    {Object.entries(sectionsByTerm).map(([term, sections]) => (
+                      <div key={term}>
+                        <div style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                          {term}
+                        </div>
+                        {sections.map(section => {
+                          const sectionData = coursesData.grouped[course.courseCode]?.sections[section];
+                          const instructors = sectionData 
+                            ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
+                            : [];
+                          const isChecked = course.selectedSections?.includes(section);
+
+                          return (
+                            <div key={section} className="cart-section-row">
+                              <input
+                                type="checkbox"
+                                id={`${course.courseCode}-${section}`}
+                                checked={isChecked}
+                                onChange={() => handleToggleSection(course.courseCode, section)}
+                                className="cart-section-checkbox"
+                              />
+                              <label 
+                                htmlFor={`${course.courseCode}-${section}`}
+                                className="cart-section-label"
+                              >
+                                <span className="cart-section-name">Section {section}</span>
+                                {instructors.length > 0 && (
+                                  <span className="cart-section-instructor">{instructors.join(', ')}</span>
+                                )}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
     </div>
   );
 }

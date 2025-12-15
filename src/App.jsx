@@ -42,7 +42,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h1>HKU Course Planner</h1>
-        <p>Automatically plan your semester courses</p>
+        <p>Plan your semester courses automatically</p>
       </header>
 
       <main className="App-main">
@@ -57,6 +57,12 @@ function App() {
           />
         )}
       </main>
+
+      {processedData && (
+        <footer className="App-footer">
+          <button className="solve-button">Solve</button>
+        </footer>
+      )}
     </div>
   )
 }
