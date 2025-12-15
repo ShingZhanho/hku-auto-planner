@@ -269,7 +269,7 @@ export const hasSectionConflict = (section1Sessions, section2Sessions) => {
  * 6. Check for time conflicts within each semester
  */
 export const generateSchedules = (selectedCourses, groupedData, availableTerms = []) => {
-  if (selectedCourses.length === 0) return { schedules: [], semesterPlans: { sem1: [], sem2: [] }, availableTerms: [] };
+  if (selectedCourses.length === 0) return { schedules: [], plans: [], availableTerms: [] };
   
   const MAX_COURSES_PER_SEMESTER = 6;
   
@@ -358,10 +358,6 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   
   // Step 3: Generate all valid distributions of bothSemesters courses
   const results = [];
-  const semesterPlans = {
-    sem1: [],
-    sem2: []
-  };
   let distributionsTested = 0;
   let subclassCombinationsTested = 0;
   let conflictRejections = 0;
@@ -502,28 +498,7 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     const sem1Combinations = generateSemesterCombinations(sem1CoursesWithSections, 'Sem 1');
     const sem2Combinations = generateSemesterCombinations(sem2CoursesWithSections, 'Sem 2');
     
-    // Add to semester plans (only if not empty and not already added to avoid duplicates)
-    sem1Combinations.forEach(combo => {
-      if (combo.length === 0) return; // Skip empty plans
-      const comboKey = combo.map(c => `${c.courseCode}-${c.section}`).sort().join('|');
-      if (!semesterPlans.sem1.some(existing => 
-        existing.map(c => `${c.courseCode}-${c.section}`).sort().join('|') === comboKey
-      )) {
-        semesterPlans.sem1.push(combo);
-      }
-    });
-    
-    sem2Combinations.forEach(combo => {
-      if (combo.length === 0) return; // Skip empty plans
-      const comboKey = combo.map(c => `${c.courseCode}-${c.section}`).sort().join('|');
-      if (!semesterPlans.sem2.some(existing => 
-        existing.map(c => `${c.courseCode}-${c.section}`).sort().join('|') === comboKey
-      )) {
-        semesterPlans.sem2.push(combo);
-      }
-    });
-    
-    // Combine Sem 1 and Sem 2 schedules
+    // Combine Sem 1 and Sem 2 schedules into complete plans
     sem1Combinations.forEach(sem1Schedule => {
       sem2Combinations.forEach(sem2Schedule => {
         const fullSchedule = [...sem1Schedule, ...sem2Schedule];
@@ -587,12 +562,20 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     return variance(countsA) - variance(countsB);
   });
   
+  // Calculate semester course counts for each plan
+  const plansWithCounts = completeSchedules.map(schedule => {
+    const sem1Count = schedule.filter(c => c.term === term1).length;
+    const sem2Count = schedule.filter(c => c.term === term2).length;
+    return {
+      courses: schedule,
+      sem1Count,
+      sem2Count
+    };
+  });
+  
   return {
     schedules: completeSchedules,
-    semesterPlans: {
-      sem1: semesterPlans.sem1,
-      sem2: semesterPlans.sem2
-    },
+    plans: plansWithCounts,
     availableTerms: availableTerms.length > 0 ? availableTerms : [term1, term2].filter((t, i, arr) => arr.indexOf(t) === i)
   };
 };

@@ -60,14 +60,16 @@
 
 .timetable-content {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem;
 }
 
 .timetable-grid {
   display: flex;
   gap: 0;
-  min-width: fit-content;
+  width: 100%;
+  min-width: 0;
 }
 
 .time-column {
@@ -112,7 +114,7 @@
 
 .day-column {
   flex: 1;
-  min-width: 120px;
+  min-width: 80px;
   border-left: 1px solid #dee2e6;
 }
 

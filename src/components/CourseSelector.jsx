@@ -220,8 +220,23 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
       <div className="right-panel">
         <div className="shopping-cart">
         <div className="cart-header">
-          <h2>Shopping Cart</h2>
-          <p className="cart-count">{selectedCourses.length} course(s) selected</p>
+          <div>
+            <h2>Shopping Cart</h2>
+            <p className="cart-count">{selectedCourses.length} course(s) selected</p>
+          </div>
+          {selectedCourses.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm(`Remove all ${selectedCourses.length} courses from cart?`)) {
+                  selectedCourses.forEach(course => onCourseRemove(course.courseCode));
+                }
+              }}
+              className="cart-clear-btn"
+              title="Clear all courses"
+            >
+              Clear All
+            </button>
+          )}
         </div>
 
         <div className="cart-content">

@@ -14,8 +14,7 @@ function App() {
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [solutions, setSolutions] = useState(null);
-  const [selectedSem1Index, setSelectedSem1Index] = useState(null);
-  const [selectedSem2Index, setSelectedSem2Index] = useState(null);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
@@ -100,8 +99,7 @@ function App() {
         const result = generateSchedules(selectedCourses, processedData.grouped, processedData.availableTerms);
         
         console.log(`Generated ${result.schedules.length} possible schedules`);
-        console.log(`Semester 1 plans: ${result.semesterPlans.sem1.length}`);
-        console.log(`Semester 2 plans: ${result.semesterPlans.sem2.length}`);
+        console.log(`Total plans: ${result.plans.length}`);
         
         if (result.schedules.length === 0) {
           setErrorMessage(
@@ -111,8 +109,7 @@ function App() {
           setSolutions(null);
         } else {
           setSolutions(result);
-          setSelectedSem1Index(result.semesterPlans.sem1.length > 0 ? 0 : null);
-          setSelectedSem2Index(result.semesterPlans.sem2.length > 0 ? 0 : null);
+          setSelectedPlanIndex(result.plans.length > 0 ? 0 : null);
           setErrorMessage('');
         }
       } catch (error) {
@@ -127,8 +124,7 @@ function App() {
 
   const handleBackToSearch = () => {
     setSolutions(null);
-    setSelectedSem1Index(null);
-    setSelectedSem2Index(null);
+    setSelectedPlanIndex(null);
   };
 
   const loadDebugCourses = () => {
@@ -201,18 +197,12 @@ function App() {
         {solutions && (
           <div className="solutions-view">
             <SolutionsList
-              sem1Plans={solutions.semesterPlans.sem1}
-              sem2Plans={solutions.semesterPlans.sem2}
-              selectedSem1Index={selectedSem1Index}
-              selectedSem2Index={selectedSem2Index}
-              onSelectSem1={setSelectedSem1Index}
-              onSelectSem2={setSelectedSem2Index}
+              plans={solutions.plans}
+              selectedIndex={selectedPlanIndex}
+              onSelectPlan={setSelectedPlanIndex}
             />
             <WeeklyTimetable 
-              schedule={[
-                ...(selectedSem1Index !== null ? solutions.semesterPlans.sem1[selectedSem1Index] : []),
-                ...(selectedSem2Index !== null ? solutions.semesterPlans.sem2[selectedSem2Index] : [])
-              ]}
+              schedule={selectedPlanIndex !== null ? solutions.plans[selectedPlanIndex].courses : []}
               availableSemesters={solutions.availableTerms || []}
             />
           </div>
@@ -235,6 +225,53 @@ function App() {
           <button className="back-button" onClick={handleBackToSearch}>
             ← Back to Search
           </button>
+          {(() => {
+            if (selectedPlanIndex === null) return null;
+            
+            const selectedPlan = solutions.plans[selectedPlanIndex];
+            const planCourses = new Set(selectedPlan.courses.map(c => c.courseCode));
+            const originalCourses = new Set(selectedCourses.map(c => c.courseCode));
+            
+            // Find missing courses
+            const missingCourses = [];
+            for (const course of originalCourses) {
+              if (!planCourses.has(course)) {
+                missingCourses.push(course);
+              }
+            }
+            
+            // Check for overlapping courses between semesters
+            const term1 = solutions.availableTerms[0];
+            const term2 = solutions.availableTerms[1] || term1;
+            const sem1Courses = new Set(selectedPlan.courses.filter(c => c.term === term1).map(c => c.courseCode));
+            const sem2Courses = new Set(selectedPlan.courses.filter(c => c.term === term2).map(c => c.courseCode));
+            const overlaps = [];
+            
+            for (const course of sem1Courses) {
+              if (sem2Courses.has(course)) {
+                overlaps.push(course);
+              }
+            }
+            
+            // Display warnings
+            const warnings = [];
+            if (missingCourses.length > 0) {
+              warnings.push(
+                <div key="missing" className="footer-warning">
+                  ⚠️ Warning: The following courses are missing from your plan: <strong>{missingCourses.join(', ')}</strong>
+                </div>
+              );
+            }
+            if (overlaps.length > 0) {
+              warnings.push(
+                <div key="overlap" className="footer-warning">
+                  ⚠️ Warning: The following courses are taken in both semesters: <strong>{overlaps.join(', ')}</strong>
+                </div>
+              );
+            }
+            
+            return warnings.length > 0 ? <>{warnings}</> : null;
+          })()}
         </footer>
       )}
 

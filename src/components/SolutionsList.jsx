@@ -1,118 +1,74 @@
-import { useMemo, useEffect } from 'react';
 import './SolutionsList.css';
 
-function SolutionsList({ sem1Plans, sem2Plans, selectedSem1Index, selectedSem2Index, onSelectSem1, onSelectSem2 }) {
-  // Check if a plan has overlapping courses with the selected plan from the other semester
-  const hasOverlappingCourses = useMemo(() => {
-    return (plan, selectedOtherPlan) => {
-      if (!selectedOtherPlan) return false;
-      
-      const planCourses = new Set(plan.map(c => c.courseCode));
-      const selectedCourses = new Set(selectedOtherPlan.map(c => c.courseCode));
-      
-      for (const course of planCourses) {
-        if (selectedCourses.has(course)) {
-          return true;
-        }
-      }
-      return false;
-    };
-  }, []);
-
-  const selectedSem1Plan = selectedSem1Index !== null ? sem1Plans[selectedSem1Index] : null;
-  const selectedSem2Plan = selectedSem2Index !== null ? sem2Plans[selectedSem2Index] : null;
-
-  // Auto-select compatible plan when current selection becomes incompatible
-  useEffect(() => {
-    // Check if current Sem 1 selection is now incompatible with Sem 2 selection
-    if (selectedSem1Index !== null && selectedSem2Plan && hasOverlappingCourses(selectedSem1Plan, selectedSem2Plan)) {
-      // Find first compatible Sem 1 plan
-      const compatibleIndex = sem1Plans.findIndex(plan => !hasOverlappingCourses(plan, selectedSem2Plan));
-      if (compatibleIndex !== -1) {
-        onSelectSem1(compatibleIndex);
-      } else {
-        onSelectSem1(null); // No compatible plans found
-      }
-    }
-  }, [selectedSem2Index, selectedSem2Plan]);
-
-  useEffect(() => {
-    // Check if current Sem 2 selection is now incompatible with Sem 1 selection
-    if (selectedSem2Index !== null && selectedSem1Plan && hasOverlappingCourses(selectedSem2Plan, selectedSem1Plan)) {
-      // Find first compatible Sem 2 plan
-      const compatibleIndex = sem2Plans.findIndex(plan => !hasOverlappingCourses(plan, selectedSem1Plan));
-      if (compatibleIndex !== -1) {
-        onSelectSem2(compatibleIndex);
-      } else {
-        onSelectSem2(null); // No compatible plans found
-      }
-    }
-  }, [selectedSem1Index, selectedSem1Plan]);
-
-  const renderPlanCard = (plan, index, semester, isSelected, onSelect, isDisabled) => (
-    <div
-      key={index}
-      className={`solution-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-      onClick={() => !isDisabled && onSelect(index)}
-    >
-      <div className="plan-card-header">
-        <h3>Plan {index + 1}</h3>
-        <span className="plan-course-count">{plan.length} {plan.length === 1 ? 'course' : 'courses'}</span>
+function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
+  const renderPlanCard = (planData, index, isSelected) => {
+    // Determine term identifiers
+    const allTerms = new Set(planData.courses.map(c => c.term));
+    const termArray = Array.from(allTerms).sort();
+    const term1 = termArray[0];
+    const term2 = termArray[1]; // Will be undefined if only one term
+    
+    // Group courses by semester and sort by course code
+    const sem1Courses = planData.courses
+      .filter(c => c.term === term1)
+      .sort((a, b) => a.courseCode.localeCompare(b.courseCode));
+    const sem2Courses = term2 ? planData.courses
+      .filter(c => c.term === term2)
+      .sort((a, b) => a.courseCode.localeCompare(b.courseCode)) : [];
+    
+    // Strip year prefix from term names for display
+    const displayTerm1 = term1 ? term1.replace(/^\d{4}-\d{2}\s*/, '') : 'Semester 1';
+    const displayTerm2 = term2 ? term2.replace(/^\d{4}-\d{2}\s*/, '') : 'Semester 2';
+    
+    return (
+      <div
+        key={index}
+        className={`solution-card ${isSelected ? 'selected' : ''}`}
+        onClick={() => onSelectPlan(index)}
+      >
+        <div className="plan-card-header">
+          <h3>Plan {index + 1}</h3>
+          <span className="plan-course-count">{planData.sem1Count}+{planData.sem2Count} courses</span>
+        </div>
+        <div className="plan-semesters">
+          {sem1Courses.length > 0 && (
+            <div className="semester-courses">
+              <h4>{displayTerm1}</h4>
+              <ul>
+                {sem1Courses.map((course, idx) => (
+                  <li key={idx}>
+                    <strong>{course.courseCode}</strong> - {course.section}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {sem2Courses.length > 0 && (
+            <div className="semester-courses">
+              <h4>{displayTerm2}</h4>
+              <ul>
+                {sem2Courses.map((course, idx) => (
+                  <li key={idx}>
+                    <strong>{course.courseCode}</strong> - {course.section}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
-      <ul>
-        {plan.map((course, idx) => (
-          <li key={idx}>
-            <strong>{course.courseCode}</strong> - {course.section}
-            <div className="course-title-small">{course.courseTitle}</div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="solutions-list">
       <div className="solutions-header">
-        <h2>Possible Plans</h2>
+        <h2>Possible Plans ({plans.length})</h2>
       </div>
       
-      <div className="solutions-content-split">
-        {sem1Plans.length > 0 && (
-          <div className="semester-column">
-            <h3 className="semester-column-title">Semester 1 Plans ({sem1Plans.length})</h3>
-            <div className="semester-scroll">
-              {sem1Plans.map((plan, index) => {
-                const isDisabled = hasOverlappingCourses(plan, selectedSem2Plan);
-                return renderPlanCard(
-                  plan,
-                  index,
-                  'sem1',
-                  selectedSem1Index === index,
-                  onSelectSem1,
-                  isDisabled
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
-        {sem2Plans.length > 0 && (
-          <div className="semester-column">
-            <h3 className="semester-column-title">Semester 2 Plans ({sem2Plans.length})</h3>
-            <div className="semester-scroll">
-              {sem2Plans.map((plan, index) => {
-                const isDisabled = hasOverlappingCourses(plan, selectedSem1Plan);
-                return renderPlanCard(
-                  plan,
-                  index,
-                  'sem2',
-                  selectedSem2Index === index,
-                  onSelectSem2,
-                  isDisabled
-                );
-              })}
-            </div>
-          </div>
+      <div className="solutions-content">
+        {plans.map((planData, index) => 
+          renderPlanCard(planData, index, selectedIndex === index)
         )}
       </div>
     </div>

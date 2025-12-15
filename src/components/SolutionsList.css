@@ -118,6 +118,32 @@
   margin-bottom: 0.75rem;
 }
 
+.plan-semesters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.semester-courses h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  color: #007bff;
+  font-weight: 600;
+}
+
+.semester-courses ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.semester-courses li {
+  padding: 0.3rem 0;
+  font-size: 0.9rem;
+  color: #333;
+  white-space: nowrap;
+}
+
 .solution-card h3 {
   margin: 0;
   font-size: 1.1rem;
@@ -128,23 +154,4 @@
   font-size: 0.85rem;
   color: #666;
   font-weight: normal;
-}
-
-.solution-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.solution-card li {
-  padding: 0.4rem 0;
-  font-size: 0.9rem;
-  color: #333;
-}
-
-.course-title-small {
-  font-size: 0.8rem;
-  color: #666;
-  font-weight: normal;
-  margin-top: 0.2rem;
 }

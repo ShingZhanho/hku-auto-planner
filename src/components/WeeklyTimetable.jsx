@@ -1,12 +1,38 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule, availableSemesters = [] }) {
+  // Count courses per semester
+  const semesterCounts = useMemo(() => {
+    const counts = {};
+    availableSemesters.forEach(sem => {
+      counts[sem] = schedule.filter(course => course.term === sem).length;
+    });
+    return counts;
+  }, [schedule, availableSemesters]);
+  
+  // Find first semester with courses
+  const firstAvailableSemester = useMemo(() => {
+    return availableSemesters.find(sem => semesterCounts[sem] > 0) || availableSemesters[0] || 'Semester 1';
+  }, [availableSemesters, semesterCounts]);
+  
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [selectedSemester, setSelectedSemester] = useState(availableSemesters[0] || 'Semester 1');
+  const [selectedSemester, setSelectedSemester] = useState(firstAvailableSemester);
+  
+  // Auto-switch to available semester if current selection has no courses
+  useEffect(() => {
+    if (semesterCounts[selectedSemester] === 0) {
+      const availableSem = availableSemesters.find(sem => semesterCounts[sem] > 0);
+      if (availableSem) {
+        setSelectedSemester(availableSem);
+        setCurrentWeekIndex(0);
+      }
+    }
+  }, [schedule, selectedSemester, availableSemesters, semesterCounts]);
 
   console.log('WeeklyTimetable received schedule:', schedule);
+  console.log('Semester counts:', semesterCounts);
 
   // Filter schedule by selected semester
   const semesterSchedule = useMemo(() => {
@@ -109,28 +135,35 @@ function WeeklyTimetable({ schedule, availableSemesters = [] }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ margin: 0 }}>Weekly Timetable</h2>
           <div className="semester-selector">
-            {availableSemesters.map((semester, index) => (
-              <button
-                key={semester}
-                className={`semester-btn ${selectedSemester === semester ? 'active' : ''}`}
-                onClick={() => {
-                  setSelectedSemester(semester);
-                  setCurrentWeekIndex(0);
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  marginLeft: index > 0 ? '0.5rem' : '0',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  backgroundColor: selectedSemester === semester ? '#2196F3' : 'white',
-                  color: selectedSemester === semester ? 'white' : '#333',
-                  cursor: 'pointer',
-                  fontWeight: selectedSemester === semester ? 'bold' : 'normal'
-                }}
-              >
-                {semester.replace(/^\d{4}-\d{2}\s*/, '')}
-              </button>
-            ))}
+            {availableSemesters.map((semester, index) => {
+              const isDisabled = semesterCounts[semester] === 0;
+              return (
+                <button
+                  key={semester}
+                  className={`semester-btn ${selectedSemester === semester ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!isDisabled) {
+                      setSelectedSemester(semester);
+                      setCurrentWeekIndex(0);
+                    }
+                  }}
+                  disabled={isDisabled}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    marginLeft: index > 0 ? '0.5rem' : '0',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    backgroundColor: isDisabled ? '#f0f0f0' : (selectedSemester === semester ? '#2196F3' : 'white'),
+                    color: isDisabled ? '#999' : (selectedSemester === semester ? 'white' : '#333'),
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    fontWeight: selectedSemester === semester ? 'bold' : 'normal',
+                    opacity: isDisabled ? 0.6 : 1
+                  }}
+                >
+                  {semester.replace(/^\d{4}-\d{2}\s*/, '')}
+                </button>
+              );
+            })}
           </div>
         </div>
         

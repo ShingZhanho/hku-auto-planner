@@ -95,6 +95,21 @@
   flex-shrink: 0;
 }
 
+.footer-warning {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  color: #856404;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.footer-warning strong {
+  color: #d32f2f;
+}
+
 .solve-button {
   background-color: #4CAF50;
   color: white;
@@ -170,8 +185,14 @@
   overflow: hidden;
 }
 
-.solutions-view > * {
+.solutions-view .solutions-list {
+  width: 350px;
+  flex-shrink: 0;
+}
+
+.solutions-view .weekly-timetable {
   flex: 1;
+  min-width: 0;
 }
 
 h1 {
