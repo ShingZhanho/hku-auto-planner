@@ -118,6 +118,12 @@
   margin-bottom: 0.75rem;
 }
 
+.plan-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .plan-semesters {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -153,6 +159,18 @@
 .plan-course-count {
   font-size: 0.85rem;
   color: #666;
+  font-weight: normal;
+}
+
+.plan-info-separator {
+  font-size: 0.85rem;
+  color: #999;
+  font-weight: normal;
+}
+
+.plan-day-offs {
+  font-size: 0.85rem;
+  color: #28a745;
   font-weight: normal;
 }
 
@@ -230,6 +248,14 @@
 
 [data-theme="dark"] .plan-course-count {
   color: var(--text-secondary);
+}
+
+[data-theme="dark"] .plan-info-separator {
+  color: #666;
+}
+
+[data-theme="dark"] .plan-day-offs {
+  color: #66bb6a;
 }
 
 [data-theme="dark"] .semester-column-title {
