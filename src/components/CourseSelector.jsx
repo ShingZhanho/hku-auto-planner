@@ -5,6 +5,8 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCourse, setExpandedCourse] = useState(null);
 
+  const MAX_COURSES = 14;
+
   // Memoize filtered courses to avoid recalculating on every render
   const filteredCourses = useMemo(() => {
     if (!searchTerm.trim()) return coursesData.courses;
@@ -24,6 +26,12 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
 
   const handleSectionSelection = (course, section, mode) => {
     const isSelectedCourse = selectedCourses.find(c => c.courseCode === course.courseCode);
+    
+    // Check if adding a new course would exceed the limit
+    if (!isSelectedCourse && selectedCourses.length >= MAX_COURSES) {
+      alert(`You can select at most ${MAX_COURSES} courses.`);
+      return;
+    }
     
     if (mode === 'any') {
       // Select all sections (let system choose)
@@ -101,7 +109,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         <div className="selector-header">
           <h2>Search Courses</h2>
           <p className="info-text">
-            {coursesData.totalCourses} courses available
+            {coursesData.totalCourses} courses available · {selectedCourses.length}/{MAX_COURSES} selected
           </p>
         </div>
 
@@ -136,6 +144,9 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                 <div className="course-meta">
                   <span className="course-dept">{course.offerDept}</span>
                   <span className="section-count">{course.sectionCount} section(s)</span>
+                  <span className="course-term" style={{color: '#2196F3', fontSize: '0.85rem'}}>
+                    {course.terms.join(', ')}
+                  </span>
                   <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
                 </div>
               </div>
@@ -152,7 +163,16 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                         All Sections
                       </button>
                       {course.sections.map(section => {
-                        const sectionData = coursesData.grouped[course.courseCode]?.sections[section];
+                        // Find which term this section belongs to
+                        let sectionData = null;
+                        for (const term of course.terms || []) {
+                          const groupKey = `${course.courseCode}-${term}`;
+                          if (coursesData.grouped[groupKey]?.sections[section]) {
+                            sectionData = coursesData.grouped[groupKey].sections[section];
+                            break;
+                          }
+                        }
+                        
                         const instructors = sectionData 
                           ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
                           : [];
@@ -209,13 +229,27 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
               const sectionsByTerm = {};
               const allSections = course.sections || [];
               
+              // Group sections by the term they belong to
               allSections.forEach(section => {
-                const sectionData = coursesData.grouped[course.courseCode]?.sections[section];
-                const term = sectionData?.[0]?.term || 'Unknown';
-                if (!sectionsByTerm[term]) {
-                  sectionsByTerm[term] = [];
+                // Try each term the course is offered in
+                let foundTerm = null;
+                for (const term of course.terms || []) {
+                  const groupKey = `${course.courseCode}-${term}`;
+                  if (coursesData.grouped[groupKey]?.sections[section]) {
+                    foundTerm = term;
+                    break;
+                  }
                 }
-                sectionsByTerm[term].push(section);
+                
+                if (!foundTerm) {
+                  console.warn(`Section ${section} not found for ${course.courseCode} in any term`);
+                  foundTerm = course.terms?.[0] || 'Unknown';
+                }
+                
+                if (!sectionsByTerm[foundTerm]) {
+                  sectionsByTerm[foundTerm] = [];
+                }
+                sectionsByTerm[foundTerm].push(section);
               });
 
               return (
@@ -241,7 +275,8 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                           {term}
                         </div>
                         {sections.map(section => {
-                          const sectionData = coursesData.grouped[course.courseCode]?.sections[section];
+                          const groupKey = `${course.courseCode}-${term}`;
+                          const sectionData = coursesData.grouped[groupKey]?.sections[section];
                           const instructors = sectionData 
                             ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
                             : [];

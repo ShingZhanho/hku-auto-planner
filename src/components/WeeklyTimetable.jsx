@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
-import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes } from '../utils/courseParser';
+import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule }) {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+
+  console.log('WeeklyTimetable received schedule:', schedule);
 
   const { weeks, dateRange } = useMemo(() => {
     const range = getScheduleDateRange(schedule);
@@ -30,6 +32,7 @@ function WeeklyTimetable({ schedule }) {
         }
       });
     });
+    console.log('Week sessions for week', currentWeek?.weekNumber, ':', sessions);
     return sessions;
   }, [schedule, currentWeek]);
 
@@ -65,8 +68,11 @@ function WeeklyTimetable({ schedule }) {
     // Group sessions by day
     const byDay = {};
     days.forEach(day => {
-      byDay[day] = weekSessions.filter(s => s.days[day]);
+      byDay[day] = weekSessions.filter(s => s.days && s.days[day] && s.days[day].trim() !== '');
     });
+    
+    console.log('Sessions grouped by day:', byDay);
+    console.log('Time range:', { minTime, maxTime, hours });
     
     return { days, dayLabels, hours, byDay, minTime, maxTime };
   }, [weekSessions]);
@@ -165,7 +171,7 @@ function WeeklyTimetable({ schedule }) {
                       <div className="session-code">{session.courseCode}</div>
                       <div className="session-section">{session.section}</div>
                       <div className="session-time">
-                        {session.startTime?.substring(0, 5)} - {session.endTime?.substring(0, 5)}
+                        {formatTime(session.startTime)} - {formatTime(session.endTime)}
                       </div>
                       <div className="session-venue">{session.venue}</div>
                     </div>

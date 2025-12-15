@@ -48,8 +48,15 @@ function App() {
   };
 
   const handleSolve = () => {
+    const MAX_COURSES = 14;
+    
     if (selectedCourses.length === 0) {
       setErrorMessage('Please select at least one course.');
+      return;
+    }
+
+    if (selectedCourses.length > MAX_COURSES) {
+      setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
       return;
     }
 
@@ -66,7 +73,16 @@ function App() {
     // Use setTimeout to allow UI to update with loading spinner
     setTimeout(() => {
       try {
+        console.log('Selected courses for solving:', selectedCourses);
+        console.log('Grouped data sample:', Object.keys(processedData.grouped).slice(0, 3).map(key => ({
+          course: key,
+          sections: Object.keys(processedData.grouped[key].sections),
+          firstSectionSessions: processedData.grouped[key].sections[Object.keys(processedData.grouped[key].sections)[0]]
+        })));
+        
         const schedules = generateSchedules(selectedCourses, processedData.grouped);
+        
+        console.log(`Generated ${schedules.length} possible schedules`);
         
         if (schedules.length === 0) {
           setErrorMessage(
@@ -92,6 +108,28 @@ function App() {
   const handleBackToSearch = () => {
     setSolutions(null);
     setSelectedSolutionIndex(0);
+  };
+
+  const loadDebugCourses = () => {
+    if (!processedData) return;
+    
+    const debugCourseCodes = [
+      'FREN2001', 'FREN2002', 'COMP1110', 'COMP2121', 'COMP2119', 
+      'COMP2396', 'CCST9064', 'CCHU9094', 'ENGG1310', 'MATH1853'
+    ];
+    
+    const coursesToAdd = debugCourseCodes
+      .map(code => processedData.courses.find(c => c.courseCode === code))
+      .filter(c => c !== undefined);
+    
+    const coursesWithSections = coursesToAdd.map(course => ({
+      ...course,
+      selectedSections: course.sections // Select all sections
+    }));
+    
+    setSelectedCourses(coursesWithSections);
+    setErrorMessage('');
+    console.log('Debug courses loaded:', coursesWithSections.map(c => c.courseCode));
   };
 
   return (
@@ -133,6 +171,9 @@ function App() {
 
       {processedData && !solutions && (
         <footer className="App-footer">
+          <button className="debug-button" onClick={loadDebugCourses}>
+            Load Debug Courses
+          </button>
           <button className="solve-button" onClick={handleSolve}>
             Solve
           </button>
