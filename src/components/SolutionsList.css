@@ -24,6 +24,61 @@
   padding: 1rem;
 }
 
+.solutions-content-split {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.semester-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.semester-column-title {
+  margin: 0 0 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.1rem;
+  color: #007bff;
+  background-color: #e7f3ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.semester-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.semester-section {
+  margin-bottom: 2rem;
+}
+
+.semester-section:last-child {
+  margin-bottom: 0;
+}
+
+.semester-section-title {
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.1rem;
+  color: #007bff;
+  background-color: #e7f3ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+}
+
 .solution-card {
   background-color: white;
   border: 2px solid #dee2e6;
@@ -45,34 +100,30 @@
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
+.solution-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.solution-card.disabled:hover {
+  border-color: #dee2e6;
+  box-shadow: none;
+}
+
 .solution-card h3 {
   margin: 0 0 0.75rem 0;
   font-size: 1.1rem;
   color: #007bff;
 }
 
-.semester-group {
-  margin-bottom: 0.75rem;
-}
-
-.semester-group:last-child {
-  margin-bottom: 0;
-}
-
-.semester-group h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.95rem;
-  color: #666;
-  font-weight: 600;
-}
-
-.semester-group ul {
+.solution-card ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.semester-group li {
+.solution-card li {
   padding: 0.4rem 0;
   font-size: 0.9rem;
   color: #333;

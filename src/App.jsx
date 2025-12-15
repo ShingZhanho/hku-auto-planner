@@ -13,7 +13,8 @@ function App() {
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [solutions, setSolutions] = useState(null);
-  const [selectedSolutionIndex, setSelectedSolutionIndex] = useState(0);
+  const [selectedSem1Index, setSelectedSem1Index] = useState(null);
+  const [selectedSem2Index, setSelectedSem2Index] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleDataLoaded = (data) => {
@@ -80,19 +81,22 @@ function App() {
           firstSectionSessions: processedData.grouped[key].sections[Object.keys(processedData.grouped[key].sections)[0]]
         })));
         
-        const schedules = generateSchedules(selectedCourses, processedData.grouped);
+        const result = generateSchedules(selectedCourses, processedData.grouped);
         
-        console.log(`Generated ${schedules.length} possible schedules`);
+        console.log(`Generated ${result.schedules.length} possible schedules`);
+        console.log(`Semester 1 plans: ${result.semesterPlans.sem1.length}`);
+        console.log(`Semester 2 plans: ${result.semesterPlans.sem2.length}`);
         
-        if (schedules.length === 0) {
+        if (result.schedules.length === 0) {
           setErrorMessage(
             'No possible schedule found with the selected courses and sections. ' +
             'Please try selecting more sections or changing your course selection.'
           );
           setSolutions(null);
         } else {
-          setSolutions(schedules);
-          setSelectedSolutionIndex(0);
+          setSolutions(result);
+          setSelectedSem1Index(result.semesterPlans.sem1.length > 0 ? 0 : null);
+          setSelectedSem2Index(result.semesterPlans.sem2.length > 0 ? 0 : null);
           setErrorMessage('');
         }
       } catch (error) {
@@ -107,7 +111,8 @@ function App() {
 
   const handleBackToSearch = () => {
     setSolutions(null);
-    setSelectedSolutionIndex(0);
+    setSelectedSem1Index(null);
+    setSelectedSem2Index(null);
   };
 
   const loadDebugCourses = () => {
@@ -160,11 +165,23 @@ function App() {
         {solutions && (
           <div className="solutions-view">
             <SolutionsList
-              solutions={solutions}
-              selectedIndex={selectedSolutionIndex}
-              onSelectSolution={setSelectedSolutionIndex}
+              sem1Plans={solutions.semesterPlans.sem1}
+              sem2Plans={solutions.semesterPlans.sem2}
+              selectedSem1Index={selectedSem1Index}
+              selectedSem2Index={selectedSem2Index}
+              onSelectSem1={setSelectedSem1Index}
+              onSelectSem2={setSelectedSem2Index}
             />
-            <WeeklyTimetable schedule={solutions[selectedSolutionIndex]} />
+            <WeeklyTimetable 
+              schedule={[
+                ...(selectedSem1Index !== null ? solutions.semesterPlans.sem1[selectedSem1Index] : []),
+                ...(selectedSem2Index !== null ? solutions.semesterPlans.sem2[selectedSem2Index] : [])
+              ]}
+              availableSemesters={[
+                ...(solutions.semesterPlans.sem1.length > 0 ? ['2025-26 Sem 1'] : []),
+                ...(solutions.semesterPlans.sem2.length > 0 ? ['2025-26 Sem 2'] : [])
+              ]}
+            />
           </div>
         )}
       </main>

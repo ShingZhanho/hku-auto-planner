@@ -351,6 +351,10 @@ export const generateSchedules = (selectedCourses, groupedData) => {
   
   // Step 3: Generate all valid distributions of bothSemesters courses
   const results = [];
+  const semesterPlans = {
+    sem1: [],
+    sem2: []
+  };
   let distributionsTested = 0;
   let subclassCombinationsTested = 0;
   let conflictRejections = 0;
@@ -491,6 +495,27 @@ export const generateSchedules = (selectedCourses, groupedData) => {
     const sem1Combinations = generateSemesterCombinations(sem1CoursesWithSections, 'Sem 1');
     const sem2Combinations = generateSemesterCombinations(sem2CoursesWithSections, 'Sem 2');
     
+    // Add to semester plans (only if not empty and not already added to avoid duplicates)
+    sem1Combinations.forEach(combo => {
+      if (combo.length === 0) return; // Skip empty plans
+      const comboKey = combo.map(c => `${c.courseCode}-${c.section}`).sort().join('|');
+      if (!semesterPlans.sem1.some(existing => 
+        existing.map(c => `${c.courseCode}-${c.section}`).sort().join('|') === comboKey
+      )) {
+        semesterPlans.sem1.push(combo);
+      }
+    });
+    
+    sem2Combinations.forEach(combo => {
+      if (combo.length === 0) return; // Skip empty plans
+      const comboKey = combo.map(c => `${c.courseCode}-${c.section}`).sort().join('|');
+      if (!semesterPlans.sem2.some(existing => 
+        existing.map(c => `${c.courseCode}-${c.section}`).sort().join('|') === comboKey
+      )) {
+        semesterPlans.sem2.push(combo);
+      }
+    });
+    
     // Combine Sem 1 and Sem 2 schedules
     sem1Combinations.forEach(sem1Schedule => {
       sem2Combinations.forEach(sem2Schedule => {
@@ -555,7 +580,13 @@ export const generateSchedules = (selectedCourses, groupedData) => {
     return variance(countsA) - variance(countsB);
   });
   
-  return completeSchedules;
+  return {
+    schedules: completeSchedules,
+    semesterPlans: {
+      sem1: semesterPlans.sem1,
+      sem2: semesterPlans.sem2
+    }
+  };
 };
 
 export const getScheduleDateRange = (schedule) => {

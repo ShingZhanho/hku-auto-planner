@@ -2,9 +2,9 @@ import { useState, useMemo } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
-function WeeklyTimetable({ schedule }) {
+function WeeklyTimetable({ schedule, availableSemesters = ['2025-26 Sem 1', '2025-26 Sem 2'] }) {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [selectedSemester, setSelectedSemester] = useState('2025-26 Sem 1');
+  const [selectedSemester, setSelectedSemester] = useState(availableSemesters[0] || '2025-26 Sem 1');
 
   console.log('WeeklyTimetable received schedule:', schedule);
 
@@ -115,6 +115,7 @@ function WeeklyTimetable({ schedule }) {
               setSelectedSemester('2025-26 Sem 1');
               setCurrentWeekIndex(0);
             }}
+            disabled={!availableSemesters.includes('2025-26 Sem 1')}
             style={{
               padding: '0.5rem 1rem',
               marginRight: '0.5rem',
@@ -122,8 +123,9 @@ function WeeklyTimetable({ schedule }) {
               borderRadius: '4px',
               backgroundColor: selectedSemester === '2025-26 Sem 1' ? '#2196F3' : 'white',
               color: selectedSemester === '2025-26 Sem 1' ? 'white' : '#333',
-              cursor: 'pointer',
-              fontWeight: selectedSemester === '2025-26 Sem 1' ? 'bold' : 'normal'
+              cursor: availableSemesters.includes('2025-26 Sem 1') ? 'pointer' : 'not-allowed',
+              fontWeight: selectedSemester === '2025-26 Sem 1' ? 'bold' : 'normal',
+              opacity: availableSemesters.includes('2025-26 Sem 1') ? 1 : 0.5
             }}
           >
             Semester 1
@@ -134,14 +136,16 @@ function WeeklyTimetable({ schedule }) {
               setSelectedSemester('2025-26 Sem 2');
               setCurrentWeekIndex(0);
             }}
+            disabled={!availableSemesters.includes('2025-26 Sem 2')}
             style={{
               padding: '0.5rem 1rem',
               border: '1px solid #ddd',
               borderRadius: '4px',
               backgroundColor: selectedSemester === '2025-26 Sem 2' ? '#2196F3' : 'white',
               color: selectedSemester === '2025-26 Sem 2' ? 'white' : '#333',
-              cursor: 'pointer',
-              fontWeight: selectedSemester === '2025-26 Sem 2' ? 'bold' : 'normal'
+              cursor: availableSemesters.includes('2025-26 Sem 2') ? 'pointer' : 'not-allowed',
+              fontWeight: selectedSemester === '2025-26 Sem 2' ? 'bold' : 'normal',
+              opacity: availableSemesters.includes('2025-26 Sem 2') ? 1 : 0.5
             }}
           >
             Semester 2
