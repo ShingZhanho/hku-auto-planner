@@ -66,11 +66,13 @@ function App() {
     
     if (selectedCourses.length === 0) {
       setErrorMessage('Please select at least one course.');
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
 
     if (selectedCourses.length > MAX_COURSES) {
       setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
 
@@ -78,6 +80,7 @@ function App() {
     const coursesWithoutSections = selectedCourses.filter(c => !c.selectedSections || c.selectedSections.length === 0);
     if (coursesWithoutSections.length > 0) {
       setErrorMessage('Please select at least one subclass for each course.');
+      setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
 
