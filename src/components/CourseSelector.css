@@ -2,6 +2,7 @@
   display: flex;
   height: 100%;
   overflow: hidden;
+  width: 100%;
 }
 
 .left-panel {
@@ -11,13 +12,16 @@
   border-right: 2px solid #ddd;
   overflow: hidden;
 }
-
 .right-panel {
   width: 400px;
+  min-width: 400px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
   background-color: #f8f9fa;
   overflow: hidden;
+  flex-shrink: 0;
+} overflow: hidden;
 }
 
 .selector-header {
@@ -193,6 +197,7 @@
   background-color: white;
   transition: all 0.3s;
   overflow: hidden;
+  margin-bottom: 1rem;
 }
 
 .course-item.selected {

@@ -197,7 +197,9 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
               Search and select courses to add them here.
             </div>
           ) : (
-            selectedCourses.map(course => {
+            [...selectedCourses]
+              .sort((a, b) => a.courseCode.localeCompare(b.courseCode))
+              .map(course => {
               const sectionsByTerm = {};
               const allSections = course.sections || [];
               
