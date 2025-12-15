@@ -4,14 +4,20 @@ import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule }) {
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [selectedSemester, setSelectedSemester] = useState('2025-26 Sem 1');
 
   console.log('WeeklyTimetable received schedule:', schedule);
 
+  // Filter schedule by selected semester
+  const semesterSchedule = useMemo(() => {
+    return schedule.filter(course => course.term === selectedSemester);
+  }, [schedule, selectedSemester]);
+
   const { weeks, dateRange } = useMemo(() => {
-    const range = getScheduleDateRange(schedule);
+    const range = getScheduleDateRange(semesterSchedule);
     const weekList = getWeekNumbers(range.minDate, range.maxDate);
     return { weeks: weekList, dateRange: range };
-  }, [schedule]);
+  }, [semesterSchedule]);
 
   const currentWeek = weeks[currentWeekIndex];
 
@@ -20,45 +26,31 @@ function WeeklyTimetable({ schedule }) {
     if (!currentWeek) return [];
     
     const sessions = [];
-    schedule.forEach(course => {
+    semesterSchedule.forEach(course => {
       course.sessions.forEach(session => {
         if (isSessionInWeek(session, currentWeek.startDate, currentWeek.endDate)) {
           sessions.push({
             ...session,
             courseCode: course.courseCode,
             courseTitle: course.courseTitle,
-            section: course.section
+            section: course.section,
+            term: course.term
           });
         }
       });
     });
     console.log('Week sessions for week', currentWeek?.weekNumber, ':', sessions);
     return sessions;
-  }, [schedule, currentWeek]);
+  }, [semesterSchedule, currentWeek]);
 
   // Build timetable grid
   const timetableData = useMemo(() => {
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
-    // Find time range
-    let minTime = 24 * 60;
-    let maxTime = 0;
-    
-    weekSessions.forEach(session => {
-      const start = timeToMinutes(session.startTime);
-      const end = timeToMinutes(session.endTime);
-      if (start !== null && start < minTime) minTime = start;
-      if (end !== null && end > maxTime) maxTime = end;
-    });
-    
-    // Round to nearest hour
-    minTime = Math.floor(minTime / 60) * 60;
-    maxTime = Math.ceil(maxTime / 60) * 60;
-    
-    // If no sessions, use default range
-    if (minTime === 24 * 60) minTime = 8 * 60;
-    if (maxTime === 0) maxTime = 18 * 60;
+    // Fixed time range: 08:00 to 19:00
+    const minTime = 8 * 60;  // 08:00
+    const maxTime = 19 * 60; // 19:00
     
     const hours = [];
     for (let h = minTime; h <= maxTime; h += 60) {
@@ -77,9 +69,9 @@ function WeeklyTimetable({ schedule }) {
     return { days, dayLabels, hours, byDay, minTime, maxTime };
   }, [weekSessions]);
 
-  const formatTime = (minutes) => {
+  const formatTimeLabel = (minutes) => {
     const hours = Math.floor(minutes / 60);
-    return `${hours}:00`;
+    return `${hours.toString().padStart(2, '0')}:00`;
   };
 
   const formatDateRange = (week) => {
@@ -115,6 +107,47 @@ function WeeklyTimetable({ schedule }) {
     <div className="weekly-timetable">
       <div className="timetable-header">
         <h2>Weekly Timetable</h2>
+        
+        <div className="semester-selector" style={{ marginBottom: '1rem' }}>
+          <button
+            className={`semester-btn ${selectedSemester === '2025-26 Sem 1' ? 'active' : ''}`}
+            onClick={() => {
+              setSelectedSemester('2025-26 Sem 1');
+              setCurrentWeekIndex(0);
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              marginRight: '0.5rem',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              backgroundColor: selectedSemester === '2025-26 Sem 1' ? '#2196F3' : 'white',
+              color: selectedSemester === '2025-26 Sem 1' ? 'white' : '#333',
+              cursor: 'pointer',
+              fontWeight: selectedSemester === '2025-26 Sem 1' ? 'bold' : 'normal'
+            }}
+          >
+            Semester 1
+          </button>
+          <button
+            className={`semester-btn ${selectedSemester === '2025-26 Sem 2' ? 'active' : ''}`}
+            onClick={() => {
+              setSelectedSemester('2025-26 Sem 2');
+              setCurrentWeekIndex(0);
+            }}
+            style={{
+              padding: '0.5rem 1rem',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              backgroundColor: selectedSemester === '2025-26 Sem 2' ? '#2196F3' : 'white',
+              color: selectedSemester === '2025-26 Sem 2' ? 'white' : '#333',
+              cursor: 'pointer',
+              fontWeight: selectedSemester === '2025-26 Sem 2' ? 'bold' : 'normal'
+            }}
+          >
+            Semester 2
+          </button>
+        </div>
+        
         <div className="week-navigation">
           <button 
             onClick={goToPreviousWeek} 
@@ -144,7 +177,7 @@ function WeeklyTimetable({ schedule }) {
             <div className="time-header"></div>
             {timetableData.hours.map(hour => (
               <div key={hour} className="time-slot">
-                {formatTime(hour)}
+                {formatTimeLabel(hour)}
               </div>
             ))}
           </div>
