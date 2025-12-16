@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import './SolutionsList.css';
 
 function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
@@ -95,32 +96,35 @@ function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
   };
 
   // Sort plans by distribution balance first, then by total day-offs
-  const sortedPlans = [...plans].map((plan, originalIndex) => ({
-    ...plan,
-    originalIndex
-  })).sort((a, b) => {
-    // First priority: balanced distribution (minimize difference between semesters)
-    const diffA = Math.abs(a.sem1Count - a.sem2Count);
-    const diffB = Math.abs(b.sem1Count - b.sem2Count);
-    if (diffA !== diffB) {
-      return diffA - diffB;
-    }
-    
-    // Second priority: more day-offs is better
-    const allTermsA = new Set(a.courses.map(c => c.term));
-    const termArrayA = Array.from(allTermsA).sort();
-    const sem1CoursesA = a.courses.filter(c => c.term === termArrayA[0]);
-    const sem2CoursesA = termArrayA[1] ? a.courses.filter(c => c.term === termArrayA[1]) : [];
-    const dayOffsA = calculateDayOffs(sem1CoursesA) + calculateDayOffs(sem2CoursesA);
-    
-    const allTermsB = new Set(b.courses.map(c => c.term));
-    const termArrayB = Array.from(allTermsB).sort();
-    const sem1CoursesB = b.courses.filter(c => c.term === termArrayB[0]);
-    const sem2CoursesB = termArrayB[1] ? b.courses.filter(c => c.term === termArrayB[1]) : [];
-    const dayOffsB = calculateDayOffs(sem1CoursesB) + calculateDayOffs(sem2CoursesB);
-    
-    return dayOffsB - dayOffsA; // More day-offs = lower index (better)
-  });
+  // Memoize this expensive calculation to prevent recomputation on every render
+  const sortedPlans = useMemo(() => {
+    return [...plans].map((plan, originalIndex) => ({
+      ...plan,
+      originalIndex
+    })).sort((a, b) => {
+      // First priority: balanced distribution (minimize difference between semesters)
+      const diffA = Math.abs(a.sem1Count - a.sem2Count);
+      const diffB = Math.abs(b.sem1Count - b.sem2Count);
+      if (diffA !== diffB) {
+        return diffA - diffB;
+      }
+      
+      // Second priority: more day-offs is better
+      const allTermsA = new Set(a.courses.map(c => c.term));
+      const termArrayA = Array.from(allTermsA).sort();
+      const sem1CoursesA = a.courses.filter(c => c.term === termArrayA[0]);
+      const sem2CoursesA = termArrayA[1] ? a.courses.filter(c => c.term === termArrayA[1]) : [];
+      const dayOffsA = calculateDayOffs(sem1CoursesA) + calculateDayOffs(sem2CoursesA);
+      
+      const allTermsB = new Set(b.courses.map(c => c.term));
+      const termArrayB = Array.from(allTermsB).sort();
+      const sem1CoursesB = b.courses.filter(c => c.term === termArrayB[0]);
+      const sem2CoursesB = termArrayB[1] ? b.courses.filter(c => c.term === termArrayB[1]) : [];
+      const dayOffsB = calculateDayOffs(sem1CoursesB) + calculateDayOffs(sem2CoursesB);
+      
+      return dayOffsB - dayOffsA; // More day-offs = lower index (better)
+    });
+  }, [plans]);
 
   return (
     <div className="solutions-list">

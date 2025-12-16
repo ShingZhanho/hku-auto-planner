@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './App.css'
 import FileUploader from './components/FileUploader'
 import CourseSelector from './components/CourseSelector'
@@ -26,6 +26,11 @@ function App() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
+
+  // Memoize selected plan schedule to prevent unnecessary re-renders
+  const selectedPlanSchedule = useMemo(() => {
+    return selectedPlanIndex !== null && solutions ? solutions.plans[selectedPlanIndex].courses : [];
+  }, [selectedPlanIndex, solutions]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -366,8 +371,8 @@ function App() {
               selectedIndex={selectedPlanIndex}
               onSelectPlan={setSelectedPlanIndex}
             />
-            <WeeklyTimetable 
-              schedule={selectedPlanIndex !== null ? solutions.plans[selectedPlanIndex].courses : []}
+            <WeeklyTimetable
+              schedule={selectedPlanSchedule}
               availableSemesters={solutions.availableTerms || []}
               blockouts={blockouts}
             />

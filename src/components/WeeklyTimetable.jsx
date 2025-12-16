@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, memo } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
@@ -19,8 +19,6 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
   
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState(firstAvailableSemester);
-  const timetableContentRef = useRef(null);
-  const hasScrolledRef = useRef(false);
   
   // Auto-switch to available semester if current selection has no courses
   useEffect(() => {
@@ -32,20 +30,6 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
       }
     }
   }, [schedule, selectedSemester, availableSemesters, semesterCounts]);
-
-  // Auto-scroll to 08:30 only on initial mount
-  useEffect(() => {
-    if (timetableContentRef.current && !hasScrolledRef.current) {
-      setTimeout(() => {
-        if (timetableContentRef.current) {
-          // 08:30 = 8.5 hours * 60px per hour = 510px
-          const scrollPosition = 8.5 * 60;
-          timetableContentRef.current.scrollTop = scrollPosition;
-          hasScrolledRef.current = true;
-        }
-      }, 100);
-    }
-  }, []);
 
   // Filter schedule by selected semester
   const semesterSchedule = useMemo(() => {
@@ -86,9 +70,29 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
-    // Full day time range: 00:00 to 24:00
-    const minTime = 0 * 60;  // 00:00
-    const maxTime = 24 * 60; // 24:00
+    // Calculate dynamic time range based on actual sessions and blockouts
+    let minTime = 8 * 60; // Default to 08:00
+    let maxTime = 19 * 60; // Default to 19:00
+    
+    // Check all sessions for earliest and latest times
+    weekSessions.forEach(session => {
+      const start = timeToMinutes(session.startTime);
+      const end = timeToMinutes(session.endTime);
+      if (start < minTime) minTime = start;
+      if (end > maxTime) maxTime = end;
+    });
+    
+    // Check blockouts
+    blockouts.forEach(blockout => {
+      const start = timeToMinutes(blockout.startTime);
+      const end = timeToMinutes(blockout.endTime);
+      if (start < minTime) minTime = start;
+      if (end > maxTime) maxTime = end;
+    });
+    
+    // Round to nearest hour and add padding
+    minTime = Math.floor(minTime / 60) * 60;
+    maxTime = Math.ceil(maxTime / 60) * 60;
     
     const hours = [];
     for (let h = minTime; h < maxTime; h += 60) {
@@ -105,7 +109,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
       console.log('Sessions grouped by day:', byDay);
       console.log('Time range:', { minTime, maxTime, hours });
     }    return { days, dayLabels, hours, byDay, minTime, maxTime };
-  }, [weekSessions]);
+  }, [weekSessions, blockouts]);
 
   const formatTimeLabel = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -142,7 +146,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
   }
 
   return (
-    <div className="weekly-timetable" ref={timetableContentRef}>
+    <div className="weekly-timetable">
       <div className="timetable-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ margin: 0 }}>Weekly Timetable</h2>
@@ -291,4 +295,28 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
   );
 }
 
-export default WeeklyTimetable;
+// Custom comparison function - only re-render if schedule courses change
+const arePropsEqual = (prevProps, nextProps) => {
+  // Check if schedule length is different
+  if (prevProps.schedule.length !== nextProps.schedule.length) {
+    return false;
+  }
+  
+  // Check if blockouts changed
+  if (prevProps.blockouts.length !== nextProps.blockouts.length) {
+    return false;
+  }
+  
+  // Deep compare schedule course codes and sections
+  for (let i = 0; i < prevProps.schedule.length; i++) {
+    const prev = prevProps.schedule[i];
+    const next = nextProps.schedule[i];
+    if (prev.courseCode !== next.courseCode || prev.section !== next.section) {
+      return false;
+    }
+  }
+  
+  return true;
+};
+
+export default memo(WeeklyTimetable, arePropsEqual);
