@@ -65,7 +65,8 @@ const deleteCookie = (name) => {
 };
 
 /**
- * Save shopping cart to cookies
+ * Save shopping cart to localStorage (with cookie fallback for hash)
+ * Using localStorage to avoid 4KB cookie size limit
  */
 export const saveShoppingCart = (dataHash, selectedCourses, blockouts) => {
   try {
@@ -76,11 +77,19 @@ export const saveShoppingCart = (dataHash, selectedCourses, blockouts) => {
       timestamp: Date.now()
     };
     
+    // Store hash in cookie for quick access
     setCookie('hku_planner_hash', dataHash);
-    setCookie('hku_planner_cart', JSON.stringify(cartData));
+    
+    // Store full cart data in localStorage (much larger limit than cookies)
+    localStorage.setItem('hku_planner_cart', JSON.stringify(cartData));
     
     if (import.meta.env.DEV) {
-      console.log('Shopping cart saved to cookies');
+      const dataSize = JSON.stringify(cartData).length;
+      console.log('Shopping cart saved to localStorage', {
+        courses: selectedCourses.length,
+        blockouts: blockouts.length,
+        dataSize: `${(dataSize / 1024).toFixed(2)} KB`
+      });
     }
   } catch (error) {
     console.error('Error saving shopping cart:', error);
@@ -88,7 +97,7 @@ export const saveShoppingCart = (dataHash, selectedCourses, blockouts) => {
 };
 
 /**
- * Load shopping cart from cookies
+ * Load shopping cart from localStorage (with cookie fallback for hash check)
  */
 export const loadShoppingCart = (currentDataHash) => {
   try {
@@ -103,7 +112,8 @@ export const loadShoppingCart = (currentDataHash) => {
       return null;
     }
     
-    const cartJson = getCookie('hku_planner_cart');
+    // Load from localStorage instead of cookies
+    const cartJson = localStorage.getItem('hku_planner_cart');
     if (!cartJson) {
       return null;
     }
@@ -120,7 +130,7 @@ export const loadShoppingCart = (currentDataHash) => {
     }
     
     if (import.meta.env.DEV) {
-      console.log('Shopping cart loaded from cookies:', {
+      console.log('Shopping cart loaded from localStorage:', {
         courses: cartData.selectedCourses.length,
         blockouts: cartData.blockouts.length,
         age: Math.round((Date.now() - cartData.timestamp) / (1000 * 60 * 60 * 24)) + ' days'
@@ -139,14 +149,15 @@ export const loadShoppingCart = (currentDataHash) => {
 };
 
 /**
- * Clear shopping cart from cookies
+ * Clear shopping cart from localStorage and cookies
  */
 export const clearShoppingCart = () => {
   deleteCookie('hku_planner_hash');
-  deleteCookie('hku_planner_cart');
+  deleteCookie('hku_planner_cart'); // Clean up old cookie data if it exists
+  localStorage.removeItem('hku_planner_cart');
   
   if (import.meta.env.DEV) {
-    console.log('Shopping cart cleared from cookies');
+    console.log('Shopping cart cleared from storage');
   }
 };
 
@@ -154,5 +165,5 @@ export const clearShoppingCart = () => {
  * Check if there's saved cart data
  */
 export const hasSavedCart = () => {
-  return getCookie('hku_planner_cart') !== null;
+  return localStorage.getItem('hku_planner_cart') !== null;
 };
