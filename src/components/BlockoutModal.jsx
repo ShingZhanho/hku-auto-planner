@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './BlockoutModal.css';
 
-function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [] }) {
+function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlockout = null }) {
   const [name, setName] = useState('Blockout');
   const [day, setDay] = useState('mon');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('10:00');
   const [applyTo, setApplyTo] = useState('both'); // 'both', 'sem1', or 'sem2'
+
+  // Populate form when editing
+  useEffect(() => {
+    if (editBlockout) {
+      setName(editBlockout.name);
+      setDay(editBlockout.day);
+      setStartTime(editBlockout.startTime);
+      setEndTime(editBlockout.endTime);
+      setApplyTo(editBlockout.applyTo || 'both');
+    } else {
+      // Reset form for new blockout
+      setName('Blockout');
+      setDay('mon');
+      setStartTime('08:00');
+      setEndTime('10:00');
+      setApplyTo('both');
+    }
+  }, [editBlockout, isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,7 +46,7 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [] }) {
     }
     
     const blockout = {
-      id: `blockout-${Date.now()}`,
+      id: editBlockout ? editBlockout.id : `blockout-${Date.now()}`,
       name: name.trim() || 'Blockout',
       day,
       startTime,
@@ -37,7 +55,7 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [] }) {
       isBlockout: true
     };
     
-    onAdd(blockout);
+    onAdd(blockout, !!editBlockout);
     
     // Reset form
     setName('Blockout');
@@ -52,11 +70,10 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [] }) {
   if (!isOpen) return null;
 
   return (
-    <div className="blockout-modal-overlay" onClick={onClose}>
+    <div className="blockout-modal-overlay">
       <div className="blockout-modal" onClick={(e) => e.stopPropagation()}>
         <div className="blockout-modal-header">
-          <h2>Add Blockout Time</h2>
-          <button className="blockout-modal-close" onClick={onClose}>×</button>
+          <h2>{editBlockout ? 'Edit Blockout Time' : 'Add Blockout Time'}</h2>
         </div>
         
         <form onSubmit={handleSubmit} className="blockout-form">
@@ -135,7 +152,7 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [] }) {
               Cancel
             </button>
             <button type="submit" className="blockout-btn-add">
-              Add Blockout
+              {editBlockout ? 'Save Changes' : 'Add Blockout'}
             </button>
           </div>
         </form>

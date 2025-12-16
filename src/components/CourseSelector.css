@@ -186,6 +186,30 @@
   margin-top: 0.25rem;
 }
 
+.cart-item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cart-edit-btn {
+  background: none;
+  border: 1px solid #2196F3;
+  color: #2196F3;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.cart-edit-btn:hover {
+  background-color: #2196F3;
+  color: white;
+}
+
 .cart-delete-btn {
   background: none;
   border: 1px solid #d32f2f;
@@ -204,6 +228,27 @@
 .cart-delete-btn:hover {
   background-color: #d32f2f;
   color: white;
+}
+
+/* Dark theme support for cart buttons */
+.dark-theme .cart-edit-btn {
+  border-color: #64B5F6;
+  color: #64B5F6;
+}
+
+.dark-theme .cart-edit-btn:hover {
+  background-color: #64B5F6;
+  color: #1e1e1e;
+}
+
+.dark-theme .cart-delete-btn {
+  border-color: #EF5350;
+  color: #EF5350;
+}
+
+.dark-theme .cart-delete-btn:hover {
+  background-color: #EF5350;
+  color: #1e1e1e;
 }
 
 .cart-sections {

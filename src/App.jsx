@@ -22,6 +22,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [blockouts, setBlockouts] = useState([]);
   const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
+  const [editingBlockout, setEditingBlockout] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
@@ -102,9 +103,26 @@ function App() {
     setErrorMessage(''); // Clear error when user makes changes
   };
 
-  const handleAddBlockout = (blockout) => {
-    setBlockouts(prev => [...prev, blockout]);
+  const handleAddBlockout = (blockout, isEdit = false) => {
+    if (isEdit) {
+      // Update existing blockout
+      setBlockouts(prev => prev.map(b => b.id === blockout.id ? blockout : b));
+    } else {
+      // Add new blockout
+      setBlockouts(prev => [...prev, blockout]);
+    }
     setErrorMessage('');
+    setEditingBlockout(null); // Clear editing state
+  };
+
+  const handleEditBlockout = (blockout) => {
+    setEditingBlockout(blockout);
+    setIsBlockoutModalOpen(true);
+  };
+
+  const handleCloseBlockoutModal = () => {
+    setIsBlockoutModalOpen(false);
+    setEditingBlockout(null); // Clear editing state when closing
   };
 
   const handleRemoveBlockout = (blockoutId) => {
@@ -249,6 +267,7 @@ function App() {
               onCourseRemove={handleCourseRemove}
               blockouts={blockouts}
               onRemoveBlockout={handleRemoveBlockout}
+              onEditBlockout={handleEditBlockout}
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
             />
@@ -356,8 +375,9 @@ function App() {
       
       <BlockoutModal
         isOpen={isBlockoutModalOpen}
-        onClose={() => setIsBlockoutModalOpen(false)}
+        onClose={handleCloseBlockoutModal}
         onAdd={handleAddBlockout}
+        editBlockout={editingBlockout}
         availableTerms={solutions?.availableTerms || []}
       />
 

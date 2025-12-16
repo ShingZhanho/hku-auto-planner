@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import './CourseSelector.css';
 
-function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, searchTerm = '', onSearchTermChange }) {
+function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, searchTerm = '', onSearchTermChange }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
 
   const MAX_COURSES = 12;
@@ -316,13 +316,22 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                       {blockout.day.charAt(0).toUpperCase() + blockout.day.slice(1)} · {blockout.startTime} - {blockout.endTime} · {applyToDisplay}
                     </div>
                   </div>
-                  <button
-                    onClick={() => onRemoveBlockout(blockout.id)}
-                    className="cart-delete-btn"
-                    title="Remove blockout"
-                  >
-                    Remove
-                  </button>
+                  <div className="cart-item-actions">
+                    <button
+                      onClick={() => onEditBlockout(blockout)}
+                      className="cart-edit-btn"
+                      title="Edit blockout"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => onRemoveBlockout(blockout.id)}
+                      className="cart-delete-btn"
+                      title="Remove blockout"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             );
