@@ -4,8 +4,8 @@ import './BlockoutModal.css';
 function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlockout = null }) {
   const [name, setName] = useState('Blockout');
   const [day, setDay] = useState('mon');
-  const [startTime, setStartTime] = useState('08:00');
-  const [endTime, setEndTime] = useState('10:00');
+  const [startTime, setStartTime] = useState('00:00');
+  const [endTime, setEndTime] = useState('01:00');
   const [applyTo, setApplyTo] = useState('both'); // 'both', 'sem1', or 'sem2'
 
   // Populate form when editing
@@ -20,7 +20,7 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlocko
       // Reset form for new blockout
       setName('Blockout');
       setDay('mon');
-      setStartTime('08:00');
+      setStartTime('09:00');
       setEndTime('10:00');
       setApplyTo('both');
     }
@@ -40,8 +40,8 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlocko
       return;
     }
     
-    if (startMinutes < 8 * 60 || endMinutes > 20 * 60) {
-      alert('Time must be between 08:00 and 20:00');
+    if (startMinutes < 0 || endMinutes > 24 * 60) {
+      alert('Time must be between 00:00 and 24:00');
       return;
     }
     
@@ -127,9 +127,8 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlocko
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                min="08:00"
-                max="20:00"
-                step="300"
+                min="00:00"
+                max="23:59"
               />
             </div>
             
@@ -140,9 +139,8 @@ function BlockoutModal({ isOpen, onClose, onAdd, availableTerms = [], editBlocko
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                min="08:00"
-                max="20:00"
-                step="300"
+                min="00:00"
+                max="24:00"
               />
             </div>
           </div>

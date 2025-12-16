@@ -6,17 +6,18 @@
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+  scroll-behavior: smooth;
 }
 
 .timetable-header {
-  padding: 1rem;
+  padding: 1rem 1rem 0 1rem;
   border-bottom: 2px solid #dee2e6;
   background-color: rgba(248, 249, 250, 0.5);
   backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 11;
 }
 
 .timetable-header h2 {
@@ -63,6 +64,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.day-headers-grid {
+  display: flex;
+  gap: 0;
+  width: calc(100% + 2rem);
+  margin-left: -1rem;
+  margin-right: -1rem;
+  background-color: rgba(248, 249, 250, 0.5);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+}
+
+.day-header-spacer {
+  width: 80px;
+  flex-shrink: 0;
 }
 
 .nav-button {
@@ -98,11 +116,6 @@
   color: #666;
 }
 
-.timetable-content {
-  padding: 1rem;
-  background-color: inherit;
-}
-
 .timetable-grid {
   display: flex;
   gap: 0;
@@ -119,7 +132,7 @@
 .time-column::after {
   content: '';
   position: absolute;
-  top: 40px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -133,21 +146,18 @@
   pointer-events: none;
 }
 
-.time-header {
-  height: 40px;
-  border-bottom: 1px solid #dee2e6;
-}
-
 .time-slot {
   height: 60px;
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   padding-top: 0;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   font-size: 0.85rem;
   color: #666;
   box-sizing: border-box;
+  position: relative;
 }
 
 .day-column {
@@ -157,6 +167,8 @@
 }
 
 .day-header {
+  flex: 1;
+  min-width: 80px;
   height: 40px;
   display: flex;
   align-items: center;
@@ -164,8 +176,8 @@
   font-weight: 600;
   font-size: 0.9rem;
   color: #333;
+  border-left: 1px solid #dee2e6;
   border-bottom: 1px solid #dee2e6;
-  background-color: #f8f9fa;
 }
 
 .day-slots {
@@ -194,8 +206,8 @@
 
 .session-block {
   position: absolute;
-  left: 2px;
-  right: 2px;
+  left: 0;
+  right: 0;
   background-color: #e7f3ff;
   border: 1px solid #007bff;
   border-radius: 4px;
@@ -267,6 +279,17 @@
   backdrop-filter: blur(10px) saturate(180%);
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   border-color: #555555;
+}
+
+[data-theme="dark"] .day-headers-grid {
+  background-color: rgba(26, 26, 26, 0.5);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+}
+
+[data-theme="dark"] .day-header {
+  background-color: transparent;
+  color: #e0e0e0;
 }
 
 [data-theme="dark"] .timetable-header h2 {
@@ -376,7 +399,6 @@
 }
 
 [data-theme="dark"] .day-header {
-  background-color: var(--bg-secondary);
   color: var(--text-primary);
   border-color: #444444;
 }

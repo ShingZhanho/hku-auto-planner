@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import './WeeklyTimetable.css';
 
@@ -19,6 +19,8 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
   
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState(firstAvailableSemester);
+  const timetableContentRef = useRef(null);
+  const hasScrolledRef = useRef(false);
   
   // Auto-switch to available semester if current selection has no courses
   useEffect(() => {
@@ -30,6 +32,20 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
       }
     }
   }, [schedule, selectedSemester, availableSemesters, semesterCounts]);
+
+  // Auto-scroll to 08:30 only on initial mount
+  useEffect(() => {
+    if (timetableContentRef.current && !hasScrolledRef.current) {
+      setTimeout(() => {
+        if (timetableContentRef.current) {
+          // 08:30 = 8.5 hours * 60px per hour = 510px
+          const scrollPosition = 8.5 * 60;
+          timetableContentRef.current.scrollTop = scrollPosition;
+          hasScrolledRef.current = true;
+        }
+      }, 100);
+    }
+  }, []);
 
   // Filter schedule by selected semester
   const semesterSchedule = useMemo(() => {
@@ -70,12 +86,12 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
-    // Fixed time range: 08:00 to 19:00
-    const minTime = 8 * 60;  // 08:00
-    const maxTime = 19 * 60; // 19:00
+    // Full day time range: 00:00 to 24:00
+    const minTime = 0 * 60;  // 00:00
+    const maxTime = 24 * 60; // 24:00
     
     const hours = [];
-    for (let h = minTime; h <= maxTime; h += 60) {
+    for (let h = minTime; h < maxTime; h += 60) {
       hours.push(h);
     }
     
@@ -126,7 +142,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
   }
 
   return (
-    <div className="weekly-timetable">
+    <div className="weekly-timetable" ref={timetableContentRef}>
       <div className="timetable-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ margin: 0 }}>Weekly Timetable</h2>
@@ -177,12 +193,17 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
             Next →
           </button>
         </div>
+        
+        <div className="day-headers-grid">
+          <div className="day-header-spacer"></div>
+          {timetableData.dayLabels.map((label, idx) => (
+            <div key={idx} className="day-header">{label}</div>
+          ))}
+        </div>
       </div>
 
-      <div className="timetable-content">
-        <div className="timetable-grid">
+      <div className="timetable-grid">
           <div className="time-column">
-            <div className="time-header"></div>
             {timetableData.hours.map(hour => (
               <div key={hour} className="time-slot">
                 {formatTimeLabel(hour)}
@@ -204,7 +225,6 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
             
             return (
               <div key={day} className="day-column">
-                <div className="day-header">{timetableData.dayLabels[dayIndex]}</div>
                 <div className="day-slots" style={{ height: `${totalHeight}px` }}>
                   {/* Render blockouts */}
                   {dayBlockouts.map((blockout, idx) => {
@@ -267,7 +287,6 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
             );
           })}
         </div>
-      </div>
     </div>
   );
 }
