@@ -217,6 +217,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
   z-index: 1;
+  opacity: 0.8;
 }
 
 .blockout-block {
@@ -406,6 +407,7 @@
 [data-theme="dark"] .session-block {
   background-color: #1e3a5f;
   border-color: #2563eb;
+  opacity: 0.98;
 }
 
 [data-theme="dark"] .session-code {
@@ -419,10 +421,10 @@
 }
 
 [data-theme="dark"] .session-block.blockout-block {
-  background-color: #4c1d95;
+  background-color: #3c245f;
   border-color: #6b21a8;
   border-width: 2px;
-  opacity: 1;
+  opacity: 0.98;
 }
 
 [data-theme="dark"] .session-block.blockout-block .session-code {
