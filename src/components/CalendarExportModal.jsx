@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { timeToMinutes } from '../utils/courseParser';
 import './CalendarExportModal.css';
 
@@ -12,6 +12,9 @@ const FIELD_PLACEHOLDERS = [
 ];
 
 function CalendarExportModal({ isOpen, onClose, schedule, availableSemesters, blockouts }) {
+  const nameInputRef = useRef(null);
+  const descTextareaRef = useRef(null);
+  
   const [selectedSemesters, setSelectedSemesters] = useState(availableSemesters.reduce((acc, sem) => {
     acc[sem] = true;
     return acc;
@@ -67,12 +70,30 @@ function CalendarExportModal({ isOpen, onClose, schedule, availableSemesters, bl
   const insertPlaceholder = (placeholder, field) => {
     if (field === 'name') {
       const newValue = eventName.slice(0, nameCaretPos) + placeholder + eventName.slice(nameCaretPos);
+      const newCaretPos = nameCaretPos + placeholder.length;
       setEventName(newValue);
-      setNameCaretPos(nameCaretPos + placeholder.length);
+      setNameCaretPos(newCaretPos);
+      
+      // Focus input and set cursor position after state updates
+      setTimeout(() => {
+        if (nameInputRef.current) {
+          nameInputRef.current.focus();
+          nameInputRef.current.setSelectionRange(newCaretPos, newCaretPos);
+        }
+      }, 0);
     } else {
       const newValue = eventDescription.slice(0, descCaretPos) + placeholder + eventDescription.slice(descCaretPos);
+      const newCaretPos = descCaretPos + placeholder.length;
       setEventDescription(newValue);
-      setDescCaretPos(descCaretPos + placeholder.length);
+      setDescCaretPos(newCaretPos);
+      
+      // Focus textarea and set cursor position after state updates
+      setTimeout(() => {
+        if (descTextareaRef.current) {
+          descTextareaRef.current.focus();
+          descTextareaRef.current.setSelectionRange(newCaretPos, newCaretPos);
+        }
+      }, 0);
     }
   };
 
@@ -358,6 +379,7 @@ function CalendarExportModal({ isOpen, onClose, schedule, availableSemesters, bl
           <div className="export-section">
             <h3>Event Title Template</h3>
             <input
+              ref={nameInputRef}
               type="text"
               className="template-input"
               value={eventName}
@@ -383,6 +405,7 @@ function CalendarExportModal({ isOpen, onClose, schedule, availableSemesters, bl
           <div className="export-section">
             <h3>Event Description Template</h3>
             <textarea
+              ref={descTextareaRef}
               className="template-textarea"
               value={eventDescription}
               onChange={handleDescChange}
