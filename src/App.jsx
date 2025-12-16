@@ -195,9 +195,69 @@ function App() {
           );
           setTimeout(() => setErrorMessage(''), 5000);
           setSolutions(null);
+          setSelectedPlanIndex(null);
         } else {
+          // Set both solutions and selected index together
           setSolutions(result);
-          setSelectedPlanIndex(result.plans.length > 0 ? 0 : null);
+          // Always select the first plan (need to account for sorting in SolutionsList)
+          // The SolutionsList component sorts plans, so we need to find which original index
+          // will be displayed first. For now, just set to 0 and let SolutionsList handle it.
+          // Better: calculate the sorted order here
+          const sortedPlans = [...result.plans].map((plan, originalIndex) => ({
+            ...plan,
+            originalIndex
+          })).sort((a, b) => {
+            // First priority: balanced distribution
+            const diffA = Math.abs(a.sem1Count - a.sem2Count);
+            const diffB = Math.abs(b.sem1Count - b.sem2Count);
+            if (diffA !== diffB) {
+              return diffA - diffB;
+            }
+            
+            // Second priority: more day-offs (calculate it)
+            const calculateDayOffs = (courses) => {
+              const weekdays = ['mon', 'tue', 'wed', 'thu', 'fri'];
+              const daysWithCourses = new Set();
+              courses.forEach(course => {
+                if (course.sessions && Array.isArray(course.sessions)) {
+                  course.sessions.forEach(session => {
+                    weekdays.forEach(day => {
+                      if (session.days && session.days[day]) {
+                        const dayValue = session.days[day].trim().toUpperCase();
+                        if (dayValue !== '') {
+                          daysWithCourses.add(day);
+                        }
+                      }
+                    });
+                  });
+                }
+              });
+              return weekdays.length - daysWithCourses.size;
+            };
+            
+            const allTermsA = new Set(a.courses.map(c => c.term));
+            const termArrayA = Array.from(allTermsA).sort();
+            const sem1CoursesA = a.courses.filter(c => c.term === termArrayA[0]);
+            const sem2CoursesA = termArrayA[1] ? a.courses.filter(c => c.term === termArrayA[1]) : [];
+            const dayOffsA = calculateDayOffs(sem1CoursesA) + calculateDayOffs(sem2CoursesA);
+            
+            const allTermsB = new Set(b.courses.map(c => c.term));
+            const termArrayB = Array.from(allTermsB).sort();
+            const sem1CoursesB = b.courses.filter(c => c.term === termArrayB[0]);
+            const sem2CoursesB = termArrayB[1] ? b.courses.filter(c => c.term === termArrayB[1]) : [];
+            const dayOffsB = calculateDayOffs(sem1CoursesB) + calculateDayOffs(sem2CoursesB);
+            
+            return dayOffsB - dayOffsA;
+          });
+          
+          // Select the first plan in the sorted order
+          const firstPlanOriginalIndex = sortedPlans[0].originalIndex;
+          if (import.meta.env.DEV) {
+            console.log('Setting selected plan index to:', firstPlanOriginalIndex);
+            console.log('Total plans available:', result.plans.length);
+            console.log('First plan (sorted):', sortedPlans[0]);
+          }
+          setSelectedPlanIndex(firstPlanOriginalIndex);
           setErrorMessage('');
         }
       } catch (error) {
@@ -207,6 +267,7 @@ function App() {
         setErrorMessage('An error occurred while generating schedules. Please try again.');
         setTimeout(() => setErrorMessage(''), 5000);
         setSolutions(null);
+        setSelectedPlanIndex(null);
       } finally {
         setIsLoading(false);
       }
