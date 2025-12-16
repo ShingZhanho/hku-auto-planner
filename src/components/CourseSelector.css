@@ -371,6 +371,32 @@
   padding: 0.25rem 0;
   margin-bottom: 0.25rem;
   border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-btn-small {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  background-color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: #333;
+}
+
+.section-btn-small:hover {
+  background-color: #f0f0f0;
+  border-color: #2196F3;
+}
+
+.section-btn-small.active {
+  background-color: #2196F3;
+  color: white;
+  border-color: #2196F3;
 }
 
 .section-btn {
@@ -393,7 +419,6 @@
   border-color: #4CAF50;
   background-color: #4CAF50;
   color: white;
-  font-weight: bold;
 }
 
 .section-btn-content {
@@ -515,6 +540,23 @@
   background-color: var(--bg-tertiary);
   border-color: #555555;
   color: var(--text-primary);
+}
+
+[data-theme="dark"] .section-btn-small {
+  background-color: var(--bg-tertiary);
+  border-color: #555555;
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .section-btn-small:hover {
+  background-color: #404040;
+  border-color: #64b5f6;
+}
+
+[data-theme="dark"] .section-btn-small.active {
+  background-color: #1976d2;
+  color: white;
+  border-color: #1976d2;
 }
 
 [data-theme="dark"] .section-btn:hover {

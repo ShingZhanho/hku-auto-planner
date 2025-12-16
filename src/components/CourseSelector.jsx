@@ -23,7 +23,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
     }
   };
 
-  const handleSectionSelection = (course, section, mode) => {
+  const handleSectionSelection = (course, section, mode, term = null) => {
     const isSelectedCourse = selectedCourses.find(c => c.courseCode === course.courseCode);
     
     // Check if adding a new course would exceed the limit
@@ -33,8 +33,48 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
     }
     
     if (mode === 'any') {
-      // Select all sections (let system choose)
-      onCourseSelect(course, course.sections);
+      // Toggle all sections
+      if (isSelectedCourse && isSelectedCourse.selectedSections.length === course.sections.length) {
+        // If all are selected, deselect all
+        onCourseRemove(course.courseCode);
+      } else {
+        // Select all sections
+        onCourseSelect(course, course.sections);
+      }
+    } else if (mode === 'term') {
+      // Toggle all sections for a specific term
+      const groupKey = `${course.courseCode}-${term}`;
+      const termSections = coursesData.grouped[groupKey] 
+        ? Object.keys(coursesData.grouped[groupKey].sections)
+        : [];
+      
+      if (termSections.length === 0) return;
+      
+      if (isSelectedCourse) {
+        const currentSections = Array.isArray(isSelectedCourse.selectedSections) 
+          ? isSelectedCourse.selectedSections 
+          : [];
+        
+        // Check if all term sections are selected
+        const allTermSelected = termSections.every(s => currentSections.includes(s));
+        
+        if (allTermSelected) {
+          // Deselect all term sections
+          const newSections = currentSections.filter(s => !termSections.includes(s));
+          if (newSections.length === 0) {
+            onCourseRemove(course.courseCode);
+          } else {
+            onCourseSelect(course, newSections);
+          }
+        } else {
+          // Select all term sections
+          const newSections = [...new Set([...currentSections, ...termSections])];
+          onCourseSelect(course, newSections);
+        }
+      } else {
+        // First selection - select all term sections
+        onCourseSelect(course, termSections);
+      }
     } else {
       // Toggle specific section
       let newSections;
@@ -178,9 +218,22 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                         
                         if (termSections.length === 0) return null;
                         
+                        // Check if all term sections are selected
+                        const currentSections = selected?.selectedSections || [];
+                        const allTermSelected = termSections.every(s => currentSections.includes(s));
+                        
                         return (
                           <div key={term} className="section-group">
-                            <div className="section-group-header">{term}</div>
+                            <div className="section-group-header">
+                              {term}
+                              <button
+                                className={`section-btn-small ${allTermSelected ? 'active' : ''}`}
+                                onClick={() => handleSectionSelection(course, null, 'term', term)}
+                                title={`Toggle all ${term} subclasses`}
+                              >
+                                All {term}
+                              </button>
+                            </div>
                             {termSections.map(section => {
                               const sectionData = coursesData.grouped[groupKey].sections[section];
                               const instructors = sectionData 
