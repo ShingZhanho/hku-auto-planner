@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import './CourseSelector.css';
 
 function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange }) {
@@ -8,12 +8,19 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
 
   // Memoize filtered courses to avoid recalculating on every render
   const filteredCourses = useMemo(() => {
-    if (!searchTerm.trim()) return coursesData.courses;
+    if (!searchTerm.trim()) return [];
     const searchLower = searchTerm.toLowerCase();
     return coursesData.courses.filter(course => 
       course.courseCode.toLowerCase().includes(searchLower)
     );
   }, [searchTerm, coursesData.courses]);
+
+  // Auto-expand when only one course matches
+  useEffect(() => {
+    if (filteredCourses.length === 1) {
+      setExpandedCourse(filteredCourses[0]);
+    }
+  }, [filteredCourses]);
 
   const handleCourseClick = (course) => {
     if (expandedCourse?.courseCode === course.courseCode) {
@@ -268,7 +275,10 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
 
         {filteredCourses.length === 0 && (
           <div className="no-results">
-            No courses found matching "{searchTerm}"
+            {!searchTerm.trim() 
+              ? 'Enter a course code to search'
+              : `No courses found matching "${searchTerm}"`
+            }
           </div>
         )}
         </div>
