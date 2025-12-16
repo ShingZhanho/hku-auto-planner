@@ -76,6 +76,38 @@ export const formatTime = (timeStr) => {
 };
 
 /**
+ * Format instructor name from "Surname,Other Names" to "Other Names Surname"
+ * Handles multiple instructors separated by semicolons
+ */
+const formatInstructorName = (instructorString) => {
+  if (!instructorString || instructorString.trim() === '') return '';
+  
+  // Split by semicolon for multiple instructors
+  const instructors = instructorString.split(';').map(name => name.trim());
+  
+  // Format each instructor name
+  const formattedInstructors = instructors.map(name => {
+    if (!name) return '';
+    
+    // Split by comma
+    const parts = name.split(',').map(part => part.trim());
+    
+    if (parts.length >= 2) {
+      // "Surname,Other Names" -> "Other Names Surname"
+      const surname = parts[0];
+      const otherNames = parts.slice(1).join(' ');
+      return `${otherNames} ${surname}`;
+    }
+    
+    // If no comma, return as-is
+    return name;
+  });
+  
+  // Join back with semicolons
+  return formattedInstructors.join('; ');
+};
+
+/**
  * Parse a single row from the CSV/JSON data
  */
 export const parseClassSession = (row) => {
@@ -101,7 +133,7 @@ export const parseClassSession = (row) => {
     endTime: row['END TIME'] || row[' END TIME'],
     courseTitle: row['COURSE TITLE'] || row[' COURSE TITLE'],
     offerDept: row['OFFER DEPT'] || row[' OFFER DEPT'],
-    instructor: row['INSTRUCTOR'] || row[' INSTRUCTOR'],
+    instructor: formatInstructorName(row['INSTRUCTOR'] || row[' INSTRUCTOR']),
   };
 };
 
