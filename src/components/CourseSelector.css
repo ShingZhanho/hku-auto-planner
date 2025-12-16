@@ -274,20 +274,6 @@
   font-weight: bold;
   font-size: 1.1rem;
   color: #1976d2;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.fy-badge {
-  display: inline-block;
-  padding: 0.15rem 0.4rem;
-  background-color: #7c3aed;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border-radius: 3px;
-  letter-spacing: 0.5px;
 }
 
 .course-title {
@@ -476,10 +462,6 @@
 
 [data-theme="dark"] .course-code {
   color: #90caf9;
-}
-
-[data-theme="dark"] .fy-badge {
-  background-color: #9333ea;
 }
 
 [data-theme="dark"] .course-title {

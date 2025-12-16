@@ -62,7 +62,7 @@ So that you don't have to bang your head against the computer trying to figure o
 >
 > The system supports adding at most 12 courses in the same year.
 > Each semester will get up to 6 courses.
-> Full year courses (suffixed with "FY") are now supported. They count as 1 course but occupy a slot in both semesters.
+> Full year courses (suffixed with "FY") are not supported at this time.
 
 4. When you're done selecting courses and blockouts, click on the green "Solve" button in the bottom right corner.
 

@@ -137,19 +137,14 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                 onClick={() => handleCourseClick(course)}
               >
                 <div className="course-main-info">
-                  <span className="course-code">
-                    {course.courseCode}
-                    {course.courseCode.endsWith('FY') && (
-                      <span className="fy-badge" title="Full Year Course">FY</span>
-                    )}
-                  </span>
+                  <span className="course-code">{course.courseCode}</span>
                   <span className="course-title">{course.courseTitle}</span>
                 </div>
                 <div className="course-meta">
                   <span className="course-dept">{course.offerDept}</span>
                   <span className="section-count">{course.sectionCount} subclass(es)</span>
                   <span className="course-term" style={{color: '#2196F3', fontSize: '0.85rem'}}>
-                    {course.isFY ? 'Full Year' : course.terms.join(', ')}
+                    {course.terms.join(', ')}
                   </span>
                   <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
                 </div>
@@ -169,72 +164,42 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                         </button>
                       </div>
                       
-                      {course.isFY ? (
-                        // For FY courses, show sections under "Full Year" without duplicates
-                        <div className="section-group">
-                          <div className="section-group-header">Full Year</div>
-                          {course.sections.map(section => {
-                            // Get section data from first available term
-                            const groupKey = `${course.courseCode}-${course.terms[0]}`;
-                            const sectionData = coursesData.grouped[groupKey]?.sections[section];
-                            const instructors = sectionData 
-                              ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
-                              : [];
-                            
-                            return (
-                              <button
-                                key={section}
-                                className={`section-btn ${isSectionSelected(course.courseCode, section) ? 'active' : ''}`}
-                                onClick={() => handleSectionSelection(course, section, 'specific')}
-                              >
-                                <div className="section-btn-content">
-                                  <span className="section-name">Subclass {section}</span>
-                                  {instructors.length > 0 && (
-                                    <span className="section-instructor">{instructors.join(', ')}</span>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        // For non-FY courses, show sections by term as before
-                        course.terms.map(term => {
-                          const groupKey = `${course.courseCode}-${term}`;
-                          const termSections = coursesData.grouped[groupKey] 
-                            ? Object.keys(coursesData.grouped[groupKey].sections)
-                            : [];
-                          
-                          if (termSections.length === 0) return null;
-                          
-                          return (
-                            <div key={term} className="section-group">
-                              <div className="section-group-header">{term}</div>
-                              {termSections.map(section => {
-                                const sectionData = coursesData.grouped[groupKey].sections[section];
-                                const instructors = sectionData 
-                                  ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
-                                  : [];
-                                
-                                return (
-                                  <button
-                                    key={section}
-                                    className={`section-btn ${isSectionSelected(course.courseCode, section) ? 'active' : ''}`}
-                                    onClick={() => handleSectionSelection(course, section, 'specific')}
-                                  >
-                                    <div className="section-btn-content">
-                                      <span className="section-name">Subclass {section}</span>
-                                      {instructors.length > 0 && (
-                                        <span className="section-instructor">{instructors.join(', ')}</span>
-                                      )}
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          );
-                        })
-                      )}
+                      {course.terms.map(term => {
+                        // Get sections for this term
+                        const groupKey = `${course.courseCode}-${term}`;
+                        const termSections = coursesData.grouped[groupKey] 
+                          ? Object.keys(coursesData.grouped[groupKey].sections)
+                          : [];
+                        
+                        if (termSections.length === 0) return null;
+                        
+                        return (
+                          <div key={term} className="section-group">
+                            <div className="section-group-header">{term}</div>
+                            {termSections.map(section => {
+                              const sectionData = coursesData.grouped[groupKey].sections[section];
+                              const instructors = sectionData 
+                                ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]
+                                : [];
+                              
+                              return (
+                                <button
+                                  key={section}
+                                  className={`section-btn ${isSectionSelected(course.courseCode, section) ? 'active' : ''}`}
+                                  onClick={() => handleSectionSelection(course, section, 'specific')}
+                                >
+                                  <div className="section-btn-content">
+                                    <span className="section-name">Subclass {section}</span>
+                                    {instructors.length > 0 && (
+                                      <span className="section-instructor">{instructors.join(', ')}</span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -312,38 +277,32 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
             </div>
           ) : (
             sortedCartCourses.map(course => {
-              // For FY courses, group all sections under "Full Year"
-              // For non-FY courses, group sections by term
+              // Group sections by the term they belong to
               const sectionsByTerm = {};
               const allSections = course.sections || [];
               
-              if (course.isFY) {
-                // FY courses: all sections under "Full Year"
-                sectionsByTerm['Full Year'] = allSections;
-              } else {
-                // Non-FY courses: group sections by the term they belong to
-                allSections.forEach(section => {
-                  // Try each term the course is offered in
-                  let foundTerm = null;
-                  for (const term of course.terms || []) {
-                    const groupKey = `${course.courseCode}-${term}`;
-                    if (coursesData.grouped[groupKey]?.sections[section]) {
-                      foundTerm = term;
-                      break;
-                    }
+              // Group sections by the term they belong to
+              allSections.forEach(section => {
+                // Try each term the course is offered in
+                let foundTerm = null;
+                for (const term of course.terms || []) {
+                  const groupKey = `${course.courseCode}-${term}`;
+                  if (coursesData.grouped[groupKey]?.sections[section]) {
+                    foundTerm = term;
+                    break;
                   }
-                  
-                  if (!foundTerm) {
-                    console.warn(`Section ${section} not found for ${course.courseCode} in any term`);
-                    foundTerm = course.terms?.[0] || 'Unknown';
-                  }
-                  
-                  if (!sectionsByTerm[foundTerm]) {
-                    sectionsByTerm[foundTerm] = [];
-                  }
-                  sectionsByTerm[foundTerm].push(section);
-                });
-              }
+                }
+                
+                if (!foundTerm) {
+                  console.warn(`Section ${section} not found for ${course.courseCode} in any term`);
+                  foundTerm = course.terms?.[0] || 'Unknown';
+                }
+                
+                if (!sectionsByTerm[foundTerm]) {
+                  sectionsByTerm[foundTerm] = [];
+                }
+                sectionsByTerm[foundTerm].push(section);
+              });
 
               return (
                 <div key={course.courseCode} className="cart-item">
@@ -368,9 +327,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                           {term}
                         </div>
                         {sections.map(section => {
-                          // For FY courses with 'Full Year' term, use first available term to get section data
-                          const actualTerm = term === 'Full Year' ? course.terms[0] : term;
-                          const groupKey = `${course.courseCode}-${actualTerm}`;
+                          const groupKey = `${course.courseCode}-${term}`;
                           const sectionData = coursesData.grouped[groupKey]?.sections[section];
                           const instructors = sectionData 
                             ? [...new Set(sectionData.map(s => s.instructor).filter(i => i))]

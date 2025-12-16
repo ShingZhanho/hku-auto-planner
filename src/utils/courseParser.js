@@ -3,13 +3,6 @@
  */
 
 /**
- * Check if a course code is a full year course (ends with FY)
- */
-export const isFullYearCourse = (courseCode) => {
-  return courseCode && courseCode.trim().endsWith('FY');
-};
-
-/**
  * Check if the term is a summer semester
  */
 export const isSummerSemester = (term) => {
@@ -118,6 +111,7 @@ export const parseClassSession = (row) => {
 export const filterCourses = (data) => {
   return data.filter(row => {
     const career = row['ACAD_CAREER'] || row[' ACAD_CAREER'];
+    const courseCode = row['COURSE CODE'] || row[' COURSE CODE'];
     const term = row['TERM'];
     
     // Only undergraduate courses
@@ -126,7 +120,8 @@ export const filterCourses = (data) => {
     // No summer semester
     if (isSummerSemester(term)) return false;
     
-    // Now accepting full year courses (FY suffix)
+    // No full year courses
+    if (courseCode && courseCode.trim().endsWith('FY')) return false;
     
     return true;
   });
@@ -166,46 +161,6 @@ export const groupByCourseAndSection = (filteredData) => {
     grouped[key].sections[section].push(parseClassSession(row));
   });
   
-  // Second pass: For FY courses, duplicate Sem 1 data to Sem 2 if Sem 2 doesn't exist
-  // Get all available terms from the data
-  const allTerms = [...new Set(filteredData.map(row => row['TERM']))].filter(t => t && !isSummerSemester(t)).sort();
-  
-  if (allTerms.length >= 2) {
-    const term1 = allTerms[0]; // e.g., "2025-26 Sem 1"
-    const term2 = allTerms[1]; // e.g., "2025-26 Sem 2"
-    
-    // Find all FY courses in Sem 1
-    Object.keys(grouped).forEach(key => {
-      const course = grouped[key];
-      if (isFullYearCourse(course.courseCode) && course.term === term1) {
-        const sem2Key = `${course.courseCode}-${term2}`;
-        
-        // If Sem 2 doesn't exist for this FY course, duplicate Sem 1 data
-        if (!grouped[sem2Key]) {
-          grouped[sem2Key] = {
-            courseCode: course.courseCode,
-            courseTitle: course.courseTitle,
-            offerDept: course.offerDept,
-            term: term2,
-            sections: {}
-          };
-          
-          // Copy all sections and their sessions
-          Object.keys(course.sections).forEach(section => {
-            grouped[sem2Key].sections[section] = course.sections[section].map(session => ({
-              ...session,
-              term: term2
-            }));
-          });
-          
-          if (import.meta.env.DEV) {
-            console.log(`Duplicated FY course ${course.courseCode} from ${term1} to ${term2} (${Object.keys(course.sections).length} sections)`);
-          }
-        }
-      }
-    });
-  }
-  
   return grouped;
 };
 
@@ -223,8 +178,7 @@ export const getUniqueCourses = (groupedData) => {
         offerDept: course.offerDept,
         terms: [],
         sections: Object.keys(course.sections),
-        sectionCount: Object.keys(course.sections).length,
-        isFY: isFullYearCourse(course.courseCode)
+        sectionCount: Object.keys(course.sections).length
       };
     }
     
@@ -328,7 +282,6 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   const onlySem1 = [];
   const onlySem2 = [];
   const bothSemesters = [];
-  const fullYearCourses = [];
   
   selectedCourses.forEach(course => {
     const courseInfo = {
@@ -337,15 +290,6 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
       offerings: course.terms,
       selectedSections: course.selectedSections
     };
-    
-    // Check if this is a full-year course
-    const isFY = isFullYearCourse(course.courseCode);
-    
-    if (isFY) {
-      // Full-year courses must be scheduled in both semesters
-      fullYearCourses.push(courseInfo);
-      return;
-    }
     
     // Check which semesters have the user's selected sections
     let hasValidSem1Sections = false;
@@ -381,34 +325,29 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   });
   
   if (import.meta.env.DEV) {
-    console.log('Full Year Courses:', fullYearCourses.map(c => c.code).join(', '));
     console.log('Only Sem 1 (based on selected sections):', onlySem1.map(c => c.code).join(', '));
     console.log('Only Sem 2 (based on selected sections):', onlySem2.map(c => c.code).join(', '));
     console.log('Both Semesters (based on selected sections):', bothSemesters.map(c => c.code).join(', '));
   }
   
   // Step 2: Check if single-semester courses already exceed limit
-  // FY courses occupy one slot in each semester
-  const fyCount = fullYearCourses.length;
-  
-  if (onlySem1.length + fyCount > MAX_COURSES_PER_SEMESTER) {
-    console.error(`❌ IMPOSSIBLE: ${onlySem1.length} sem1-only + ${fyCount} FY courses exceed limit of ${MAX_COURSES_PER_SEMESTER}`);
-    console.error('   Courses:', [...fullYearCourses, ...onlySem1].map(c => c.code).join(', '));
+  if (onlySem1.length > MAX_COURSES_PER_SEMESTER) {
+    console.error(`❌ IMPOSSIBLE: ${onlySem1.length} courses can only be scheduled in Sem 1, exceeds limit of ${MAX_COURSES_PER_SEMESTER}`);
+    console.error('   Courses:', onlySem1.map(c => c.code).join(', '));
     return [];
   }
-  if (onlySem2.length + fyCount > MAX_COURSES_PER_SEMESTER) {
-    console.error(`❌ IMPOSSIBLE: ${onlySem2.length} sem2-only + ${fyCount} FY courses exceed limit of ${MAX_COURSES_PER_SEMESTER}`);
-    console.error('   Courses:', [...fullYearCourses, ...onlySem2].map(c => c.code).join(', '));
+  if (onlySem2.length > MAX_COURSES_PER_SEMESTER) {
+    console.error(`❌ IMPOSSIBLE: ${onlySem2.length} courses only offered in Sem 2, exceeds limit of ${MAX_COURSES_PER_SEMESTER}`);
+    console.error('   Courses:', onlySem2.map(c => c.code).join(', '));
     return [];
   }
   
-  const sem1Slots = MAX_COURSES_PER_SEMESTER - onlySem1.length - fyCount;
-  const sem2Slots = MAX_COURSES_PER_SEMESTER - onlySem2.length - fyCount;
+  const sem1Slots = MAX_COURSES_PER_SEMESTER - onlySem1.length;
+  const sem2Slots = MAX_COURSES_PER_SEMESTER - onlySem2.length;
   
   if (import.meta.env.DEV) {
-    console.log(`Full Year: ${fyCount} courses (occupy slots in both semesters)`);
-    console.log(`Sem 1: ${fyCount} FY + ${onlySem1.length} fixed = ${fyCount + onlySem1.length}, ${sem1Slots} slots remaining`);
-    console.log(`Sem 2: ${fyCount} FY + ${onlySem2.length} fixed = ${fyCount + onlySem2.length}, ${sem2Slots} slots remaining`);
+    console.log(`Sem 1: ${onlySem1.length} fixed courses, ${sem1Slots} slots remaining`);
+    console.log(`Sem 2: ${onlySem2.length} fixed courses, ${sem2Slots} slots remaining`);
   }
   
   if (bothSemesters.length > sem1Slots + sem2Slots) {
@@ -453,26 +392,6 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   
   // For a given distribution, try all subclass combinations
   const trySubclassCombinations = (sem1Courses, sem2Courses) => {
-    // Add FY courses to both semesters
-    const sem1CoursesWithFY = [...fullYearCourses, ...sem1Courses];
-    const sem2CoursesWithFY = [...fullYearCourses, ...sem2Courses];
-    
-    if (import.meta.env.DEV && fullYearCourses.length > 0) {
-      console.log('FY courses being added to schedules:', fullYearCourses.map(c => c.code));
-      fullYearCourses.forEach(fyCourse => {
-        const key1 = `${fyCourse.code}-${term1}`;
-        const key2 = `${fyCourse.code}-${term2}`;
-        console.log(`Checking FY course ${fyCourse.code}:`, {
-          key1,
-          existsInSem1: !!groupedData[key1],
-          key2,
-          existsInSem2: !!groupedData[key2],
-          sections1: groupedData[key1] ? Object.keys(groupedData[key1].sections) : [],
-          sections2: groupedData[key2] ? Object.keys(groupedData[key2].sections) : []
-        });
-      });
-    }
-    
     // Prepare course-section data for each semester
     const prepareSemesterCourses = (courses, targetSemester) => {
       const validCourses = [];
@@ -510,8 +429,8 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
       return validCourses;
     };
     
-    const sem1CoursesWithSections = prepareSemesterCourses(sem1CoursesWithFY, term1);
-    const sem2CoursesWithSections = prepareSemesterCourses(sem2CoursesWithFY, term2);
+    const sem1CoursesWithSections = prepareSemesterCourses(sem1Courses, term1);
+    const sem2CoursesWithSections = prepareSemesterCourses(sem2Courses, term2);
     
     // Generate all subclass combinations for a semester
     const generateSemesterCombinations = (courses, semesterName, semesterBlockouts) => {
@@ -617,25 +536,10 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     const sem2Combinations = generateSemesterCombinations(sem2CoursesWithSections, 'Sem 2', sem2Blockouts);
     
     // Combine Sem 1 and Sem 2 schedules into complete plans
-    // For FY courses, ensure the same section is used in both semesters
     sem1Combinations.forEach(sem1Schedule => {
       sem2Combinations.forEach(sem2Schedule => {
-        // Check if FY courses use matching sections
-        let fyCoursesMatch = true;
-        
-        fullYearCourses.forEach(fyCourse => {
-          const sem1Entry = sem1Schedule.find(c => c.courseCode === fyCourse.code);
-          const sem2Entry = sem2Schedule.find(c => c.courseCode === fyCourse.code);
-          
-          if (sem1Entry && sem2Entry && sem1Entry.section !== sem2Entry.section) {
-            fyCoursesMatch = false;
-          }
-        });
-        
-        if (fyCoursesMatch) {
-          const fullSchedule = [...sem1Schedule, ...sem2Schedule];
-          results.push(fullSchedule);
-        }
+        const fullSchedule = [...sem1Schedule, ...sem2Schedule];
+        results.push(fullSchedule);
       });
     });
   };
@@ -703,15 +607,10 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   const plansWithCounts = completeSchedules.map(schedule => {
     const sem1Count = schedule.filter(c => c.term === term1).length;
     const sem2Count = schedule.filter(c => c.term === term2).length;
-    
-    // Count unique courses (FY courses appear in both semesters but should count as 1)
-    const uniqueCourses = new Set(schedule.map(c => c.courseCode));
-    
     return {
       courses: schedule,
       sem1Count,
-      sem2Count,
-      totalUniqueCourses: uniqueCourses.size
+      sem2Count
     };
   });
   
