@@ -155,6 +155,14 @@
   white-space: nowrap;
 }
 
+.no-lectures-note {
+  margin: 0.5rem 0 0 0;
+  padding: 0.25rem 0;
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
 .solution-card h3 {
   margin: 0;
   font-size: 1.1rem;
@@ -226,6 +234,10 @@
 
 [data-theme="dark"] .semester-courses li {
   color: var(--text-primary);
+}
+
+[data-theme="dark"] .no-lectures-note {
+  color: var(--text-secondary);
 }
 
 [data-theme="dark"] .semester-section-title {

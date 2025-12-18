@@ -31,9 +31,22 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
     }
   }, [schedule, selectedSemester, availableSemesters, semesterCounts]);
 
-  // Filter schedule by selected semester
+  // Filter schedule by selected semester and only include courses with valid sessions
   const semesterSchedule = useMemo(() => {
-    return schedule.filter(course => course.term === selectedSemester);
+    return schedule.filter(course => {
+      if (course.term !== selectedSemester) return false;
+      if (!course.sessions || course.sessions.length === 0) return false;
+      
+      // Check if at least one session has valid times
+      const hasValidSession = course.sessions.some(session => {
+        const hasValidTimes = session.startTime && session.endTime && 
+                             (typeof session.startTime !== 'string' || session.startTime.trim() !== '') && 
+                             (typeof session.endTime !== 'string' || session.endTime.trim() !== '');
+        return hasValidTimes;
+      });
+      
+      return hasValidSession;
+    });
   }, [schedule, selectedSemester]);
 
   const { weeks, dateRange } = useMemo(() => {
@@ -44,13 +57,67 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
 
   const currentWeek = weeks[currentWeekIndex];
 
+  // Auto-select first week with classes when semester changes
+  useEffect(() => {
+    if (!semesterSchedule || semesterSchedule.length === 0 || !weeks || weeks.length === 0) {
+      return;
+    }
+
+    // Find first week that has any sessions
+    for (let i = 0; i < weeks.length; i++) {
+      const week = weeks[i];
+      let hasClasses = false;
+      
+      for (const course of semesterSchedule) {
+        if (!course.sessions) continue;
+        
+        for (const session of course.sessions) {
+          // Check if session has valid times
+          const hasValidTimes = session.startTime && session.endTime && 
+                               (typeof session.startTime !== 'string' || session.startTime.trim() !== '') && 
+                               (typeof session.endTime !== 'string' || session.endTime.trim() !== '');
+          
+          if (hasValidTimes && isSessionInWeek(session, week.startDate, week.endDate)) {
+            hasClasses = true;
+            break;
+          }
+        }
+        
+        if (hasClasses) break;
+      }
+      
+      if (hasClasses) {
+        setCurrentWeekIndex(i);
+        if (import.meta.env.DEV) {
+          console.log('Auto-selected week with classes:', i + 1);
+        }
+        return;
+      }
+    }
+  }, [semesterSchedule, weeks, selectedSemester]);
+
   // Get sessions for current week
   const weekSessions = useMemo(() => {
     if (!currentWeek) return [];
     
     const sessions = [];
+    
     semesterSchedule.forEach(course => {
+      if (!course.sessions) return;
+      
       course.sessions.forEach(session => {
+        // Skip sessions without valid dates or times (check for empty strings too)
+        const hasValidDates = session.startDate && session.endDate && 
+                             (typeof session.startDate !== 'string' || session.startDate.trim() !== '') && 
+                             (typeof session.endDate !== 'string' || session.endDate.trim() !== '');
+        const hasValidTimes = session.startTime && session.endTime && 
+                             (typeof session.startTime !== 'string' || session.startTime.trim() !== '') && 
+                             (typeof session.endTime !== 'string' || session.endTime.trim() !== '');
+        
+        if (!hasValidDates || !hasValidTimes) {
+          return;
+        }
+        
         if (isSessionInWeek(session, currentWeek.startDate, currentWeek.endDate)) {
           sessions.push({
             ...session,
@@ -62,6 +129,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
         }
       });
     });
+    
     return sessions;
   }, [semesterSchedule, currentWeek]);
 
@@ -71,32 +139,42 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
     const dayLabels = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     
     // Calculate dynamic time range based on actual sessions and blockouts
-    let minTime = 23 * 60 + 59; // Default to 23:59 -- for finding earliest time
-    let maxTime = 0;            // Default to 00:00 -- for finding latest time
+    let minTime = Infinity;
+    let maxTime = -Infinity;
     
     // Check all sessions for earliest and latest times
     weekSessions.forEach(session => {
-      const start = timeToMinutes(session.startTime);
-      const end = timeToMinutes(session.endTime);
-      if (start < minTime) minTime = start;
-      if (end > maxTime) maxTime = end;
+      if (session.startTime && session.endTime) {
+        const start = timeToMinutes(session.startTime);
+        const end = timeToMinutes(session.endTime);
+        if (start < minTime) minTime = start;
+        if (end > maxTime) maxTime = end;
+      }
     });
     
     // Check blockouts
     blockouts.forEach(blockout => {
-      const start = timeToMinutes(blockout.startTime);
-      const end = timeToMinutes(blockout.endTime);
-      if (start < minTime) minTime = start;
-      if (end > maxTime) maxTime = end;
+      if (blockout.startTime && blockout.endTime) {
+        const start = timeToMinutes(blockout.startTime);
+        const end = timeToMinutes(blockout.endTime);
+        if (start < minTime) minTime = start;
+        if (end > maxTime) maxTime = end;
+      }
     });
     
-    // Round to nearest hour and add 1 hour padding
-    minTime = Math.floor(minTime / 60) * 60 - 60;
-    maxTime = Math.ceil(maxTime / 60) * 60 + 60;
-
-    // Ensure bounds are within 0 to 24 hours
-    if (minTime < 0) minTime = 0;
-    if (maxTime > 24 * 60) maxTime = 24 * 60;
+    // If no valid times found, use default range 08:00-19:00
+    if (!isFinite(minTime) || !isFinite(maxTime)) {
+      minTime = 8 * 60;
+      maxTime = 19 * 60;
+    } else {
+      // Round to nearest hour and add 1 hour padding
+      minTime = Math.floor(minTime / 60) * 60 - 60;
+      maxTime = Math.ceil(maxTime / 60) * 60 + 60;
+      
+      // Ensure bounds are within 0 to 24 hours
+      if (minTime < 0) minTime = 0;
+      if (maxTime > 24 * 60) maxTime = 24 * 60;
+    }
     
     const hours = [];
     for (let h = minTime; h < maxTime; h += 60) {

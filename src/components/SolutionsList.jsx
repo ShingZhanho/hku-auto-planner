@@ -2,6 +2,18 @@ import { useMemo } from 'react';
 import './SolutionsList.css';
 
 function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
+  // Check if a course has valid sessions
+  const hasValidSessions = (course) => {
+    if (!course.sessions || course.sessions.length === 0) return false;
+    
+    return course.sessions.some(session => {
+      const hasValidTimes = session.startTime && session.endTime && 
+                           (typeof session.startTime !== 'string' || session.startTime.trim() !== '') && 
+                           (typeof session.endTime !== 'string' || session.endTime.trim() !== '');
+      return hasValidTimes;
+    });
+  };
+
   // Calculate day-offs for a semester (weekdays with no courses)
   const calculateDayOffs = (courses) => {
     const weekdays = ['mon', 'tue', 'wed', 'thu', 'fri'];
@@ -72,7 +84,7 @@ function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
               <ul>
                 {sem1Courses.map((course, idx) => (
                   <li key={idx}>
-                    <strong>{course.courseCode}</strong> - {course.section}
+                    <strong>{course.courseCode}{!hasValidSessions(course) ? ' *' : ''}</strong> - {course.section}
                   </li>
                 ))}
               </ul>
@@ -84,13 +96,16 @@ function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
               <ul>
                 {sem2Courses.map((course, idx) => (
                   <li key={idx}>
-                    <strong>{course.courseCode}</strong> - {course.section}
+                    <strong>{course.courseCode}{!hasValidSessions(course) ? ' *' : ''}</strong> - {course.section}
                   </li>
                 ))}
               </ul>
             </div>
           )}
         </div>
+        {(sem1Courses.some(c => !hasValidSessions(c)) || sem2Courses.some(c => !hasValidSessions(c))) && (
+          <p className="no-lectures-note">* No scheduled lectures</p>
+        )}
       </div>
     );
   };
