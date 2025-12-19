@@ -247,8 +247,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [], on
                     }}
                     disabled={isDisabled}
                     style={{
-                      padding: '0.5rem 1rem',
-                      marginLeft: index > 0 ? '0.5rem' : '0'
+                      padding: '0.5rem'
                     }}
                   >
                     {semester.replace(/^\d{4}-\d{2}\s*/, '')}
