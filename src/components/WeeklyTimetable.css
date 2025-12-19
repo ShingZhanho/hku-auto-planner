@@ -177,7 +177,6 @@
   font-size: 0.9rem;
   color: #333;
   border-left: 1px solid #dee2e6;
-  border-bottom: 1px solid #dee2e6;
 }
 
 .day-slots {
@@ -435,4 +434,24 @@
 [data-theme="dark"] .session-block.blockout-block .session-time {
   color: #e9d5ff;
   font-weight: 600;
+}
+
+[data-theme="dark"] .day-slots::before {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #444 0,
+    #444 1px,
+    transparent 1px,
+    transparent 60px
+  );
+}
+
+[data-theme="dark"] .time-column::after {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #444 0px,
+    #444 1px,
+    transparent 1px,
+    transparent 60px
+  );
 }
