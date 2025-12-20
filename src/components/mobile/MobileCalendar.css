@@ -80,26 +80,28 @@
 }
 
 .mobile-nav-button {
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
   padding: 0.5rem 1rem;
-  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
   white-space: nowrap;
+  min-width: 5rem;
 }
 
 .mobile-nav-button:hover:not(:disabled) {
-  background: var(--hover-bg);
-  border-color: #007bff;
+  background: #0056b3;
 }
 
 .mobile-nav-button:disabled {
-  opacity: 0.4;
+  background: #ccc;
+  color: #666;
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .mobile-week-info {
@@ -297,11 +299,16 @@
 }
 
 [data-theme="dark"] .mobile-nav-button {
-  border-color: #555555;
+  background: #1976d2;
 }
 
 [data-theme="dark"] .mobile-nav-button:hover:not(:disabled) {
-  border-color: #42a5f5;
+  background: #1565c0;
+}
+
+[data-theme="dark"] .mobile-nav-button:disabled {
+  background: #2a2a2a;
+  color: #666666;
 }
 
 [data-theme="dark"] .mobile-day-headers {

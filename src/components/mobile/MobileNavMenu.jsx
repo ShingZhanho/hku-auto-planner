@@ -56,6 +56,24 @@ function MobileNavMenu({ isOpen, onClose, view, onViewChange, hasData, hasSoluti
         </nav>
         
         <div className="mobile-menu-footer">
+          <div className="menu-footer-links">
+            <a 
+              href="https://github.com/ShingZhanho/hku-auto-planner#readme" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="menu-footer-link"
+            >
+              How to Use
+            </a>
+            <a 
+              href="https://github.com/ShingZhanho/hku-auto-planner" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="menu-footer-link"
+            >
+              GitHub
+            </a>
+          </div>
           <div className="menu-footer-theme">
             <ThemeToggle />
           </div>

@@ -100,11 +100,12 @@
   border-top: 2px solid var(--border-color);
   padding: 1rem;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .mobile-action-btn {
   width: 100%;
-  padding: 1rem;
+  padding: 0.875rem;
   background: #007bff;
   color: white;
   border: none;
@@ -113,6 +114,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
+  box-sizing: border-box;
 }
 
 .mobile-action-btn:hover {

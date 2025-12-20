@@ -149,15 +149,13 @@ function MobileApp() {
       {/* Top Bar */}
       <header className="mobile-header">
         <div className="mobile-header-content">
-          {view !== 'upload' && (
-            <button 
-              className="mobile-menu-btn"
-              onClick={() => setIsNavMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              ☰
-            </button>
-          )}
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setIsNavMenuOpen(true)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
           
           <h1 className="mobile-title">
             HKU Course Planner <span className="beta-badge">BETA</span>
@@ -251,6 +249,15 @@ function MobileApp() {
 
       {/* Bottom Bar */}
       <footer className="mobile-footer">
+        {view === 'upload' && (
+          <button 
+            className="mobile-action-btn"
+            onClick={() => window.open('https://github.com/ShingZhanho/hku-auto-planner#readme', '_blank')}
+          >
+            How to Use
+          </button>
+        )}
+        
         {view === 'select' && selectedCourses.length > 0 && (
           <button 
             className="mobile-action-btn"
