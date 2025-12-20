@@ -1,0 +1,318 @@
+.mobile-course-selector {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-primary);
+}
+
+.mobile-search-box {
+  padding: 1rem;
+  background: rgba(248, 249, 250, 0.5);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border-bottom: 2px solid var(--border-color);
+  box-sizing: border-box;
+}
+
+.mobile-search-input {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.mobile-search-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.mobile-courses-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.mobile-empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.mobile-course-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.mobile-course-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mobile-course-header:active {
+  background: var(--hover-bg);
+}
+
+.mobile-course-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-course-code {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.mobile-course-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.mobile-course-meta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mobile-selected-badge {
+  background: #28a745;
+  color: white;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mobile-expand-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  min-width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.mobile-expand-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.mobile-sections-container {
+  border-top: 1px solid var(--border-light);
+  padding: 0.75rem;
+}
+
+.mobile-toggle-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 0.75rem;
+}
+
+.mobile-toggle-btn:active {
+  transform: scale(0.98);
+}
+
+.mobile-toggle-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.mobile-toggle-all {
+  margin-bottom: 1rem;
+}
+
+.mobile-term-group {
+  margin-bottom: 1rem;
+}
+
+.mobile-term-group:last-child {
+  margin-bottom: 0;
+}
+
+.mobile-term-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-term-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-toggle-term {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.mobile-sections-list {
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mobile-section-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mobile-section-item:last-child {
+  border-bottom: none;
+}
+
+.mobile-section-item:active {
+  background: var(--hover-bg);
+}
+
+.mobile-section-item.selected {
+  background: rgba(0, 123, 255, 0.05);
+}
+
+.mobile-section-checkbox {
+  flex-shrink: 0;
+  padding-top: 0.1rem;
+}
+
+.mobile-section-checkbox input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+}
+
+.mobile-section-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-section-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mobile-section-instructor {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.mobile-section-sessions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mobile-session-tag {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Dark mode */
+[data-theme="dark"] .mobile-search-box {
+  background-color: rgba(26, 26, 26, 0.5);
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-search-input {
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-search-input:focus {
+  border-color: #42a5f5;
+}
+
+[data-theme="dark"] .mobile-course-card {
+  background: var(--bg-tertiary);
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-course-code {
+  color: #64b5f6;
+}
+
+[data-theme="dark"] .mobile-expand-btn {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .mobile-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .mobile-sections-list {
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-sections-container {
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-toggle-btn {
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-toggle-btn.active {
+  background: #42a5f5;
+  border-color: #42a5f5;
+}
+
+[data-theme="dark"] .mobile-section-item {
+  border-color: #555555;
+}
+
+[data-theme="dark"] .mobile-section-item.selected {
+  background: rgba(66, 165, 245, 0.15);
+}
+
+[data-theme="dark"] .mobile-session-tag {
+  background: rgba(66, 165, 245, 0.2);
+  color: #64b5f6;
+}

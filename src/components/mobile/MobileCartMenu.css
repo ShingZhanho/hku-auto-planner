@@ -1,0 +1,281 @@
+.mobile-cart-menu {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  bottom: 0;
+  width: 320px;
+  background: var(--bg-primary);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease;
+}
+
+.mobile-cart-menu.open {
+  right: 0;
+}
+
+.mobile-cart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 2px solid var(--border-color);
+  background-color: rgba(248, 249, 250, 0.5);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+}
+
+.mobile-cart-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.mobile-cart-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.cart-section {
+  margin-bottom: 2rem;
+}
+
+.cart-section:last-child {
+  margin-bottom: 0;
+}
+
+.cart-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.cart-section-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cart-section-header .cart-section-title {
+  margin-bottom: 0;
+}
+
+.cart-add-blockout-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cart-add-blockout-btn:hover {
+  background: #0056b3;
+}
+
+.cart-empty-message {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.cart-courses-list,
+.cart-blockouts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cart-course-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+}
+
+.cart-course-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-course-code {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #007bff;
+}
+
+.cart-course-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.cart-course-sections {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cart-course-actions,
+.cart-blockout-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cart-edit-btn {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.cart-edit-btn:hover {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.cart-remove-btn {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.cart-remove-btn:hover {
+  background: rgba(220, 53, 69, 0.2);
+}
+
+.cart-blockout-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  gap: 0.75rem;
+}
+
+.cart-blockout-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cart-blockout-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cart-blockout-details {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.cart-blockout-time {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.cart-blockout-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.cart-edit-btn {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.cart-edit-btn:hover {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+/* Dark mode */
+[data-theme="dark"] .mobile-cart-header {
+  background-color: rgba(26, 26, 26, 0.5);
+  border-color: #555555;
+}
+
+[data-theme="dark"] .cart-add-blockout-btn {
+  background: #1976d2;
+}
+
+[data-theme="dark"] .cart-add-blockout-btn:hover {
+  background: #1565c0;
+}
+
+[data-theme="dark"] .cart-course-code {
+  color: #64b5f6;
+}
+
+[data-theme="dark"] .cart-course-item,
+[data-theme="dark"] .cart-blockout-item {
+  background: var(--bg-tertiary);
+  border-color: #555555;
+}
+
+[data-theme="dark"] .cart-edit-btn {
+  background: rgba(66, 165, 245, 0.2);
+  color: #64b5f6;
+}
+
+[data-theme="dark"] .cart-edit-btn:hover {
+  background: rgba(66, 165, 245, 0.3);
+}

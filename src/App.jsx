@@ -310,16 +310,6 @@ function App() {
 
   return (
     <div className="App">
-      {isMobile ? (
-        <div className="mobile-block">
-          <div className="mobile-block-content">
-            <h1>📱 Desktop Only</h1>
-            <p>This application is only available on desktop devices.</p>
-            <p>Please visit this site on a computer with a screen width of at least 1024px.</p>
-          </div>
-        </div>
-      ) : (
-        <>
       <header className="App-header">
         <div className="header-content">
           <h1>HKU Course Planner <span className="beta-badge" title="This is a beta version and may contain bugs or incomplete features.">BETA</span></h1>
@@ -434,8 +424,6 @@ function App() {
         availableSemesters={solutions?.availableTerms || []}
         blockouts={blockouts}
       />
-        </>
-      )}
     </div>
   )
 }
