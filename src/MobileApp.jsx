@@ -23,6 +23,8 @@ function MobileApp() {
   const [blockouts, setBlockouts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
+  const [overloadEnabled, setOverloadEnabled] = useState(false);
+  const [maxPerSemester, setMaxPerSemester] = useState(6);
   
   // Menu states
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
@@ -48,6 +50,34 @@ function MobileApp() {
       saveShoppingCart(dataHash, selectedCourses, blockouts);
     }
   }, [selectedCourses, blockouts, dataHash, processedData]);
+
+  // Load overload preference from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_overload');
+      if (stored !== null) setOverloadEnabled(stored === 'true');
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hku_planner_overload', overloadEnabled ? 'true' : 'false');
+    } catch (e) {}
+  }, [overloadEnabled]);
+
+  // Load/save max per semester for mobile
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_max_per_semester');
+      if (stored !== null) setMaxPerSemester(parseInt(stored, 10) || 6);
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
+    } catch (e) {}
+  }, [maxPerSemester]);
 
   const handleDataLoaded = (data) => {
     setCourseData(data);
@@ -109,7 +139,8 @@ function MobileApp() {
           selectedCourses, 
           processedData.grouped, 
           processedData.availableTerms, 
-          blockouts
+          blockouts,
+          overloadEnabled ? maxPerSemester : 6
         );
         
         if (schedules.plans.length === 0) {
@@ -160,6 +191,13 @@ function MobileApp() {
           <h1 className="mobile-title">
             HKU Course Planner <span className="beta-badge">BETA</span>
           </h1>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Overload</label>
+            <label className="switch" title="Toggle overload mode">
+              <input type="checkbox" checked={overloadEnabled} onChange={(e) => setOverloadEnabled(e.target.checked)} />
+              <span className="slider"></span>
+            </label>
+          </div>
           
           {view === 'select' && (
             <button 
@@ -215,10 +253,13 @@ function MobileApp() {
         )}
 
         {!isLoading && view === 'select' && processedData && (
-          <MobileCourseSelector 
+            <MobileCourseSelector 
             coursesData={processedData}
             selectedCourses={selectedCourses}
-            onCourseSelect={handleCourseSelect}
+                overloadEnabled={overloadEnabled}
+                maxPerSemester={maxPerSemester}
+                setMaxPerSemester={setMaxPerSemester}
+                onCourseSelect={handleCourseSelect}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
           />

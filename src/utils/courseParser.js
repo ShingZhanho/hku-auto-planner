@@ -327,10 +327,10 @@ export const hasSectionConflict = (section1Sessions, section2Sessions) => {
  * 6. Check for time conflicts within each semester
  * 7. Filter out schedules that clash with blockouts
  */
-export const generateSchedules = (selectedCourses, groupedData, availableTerms = [], blockouts = []) => {
+export const generateSchedules = (selectedCourses, groupedData, availableTerms = [], blockouts = [], maxPerSemester = 6) => {
   if (selectedCourses.length === 0) return { schedules: [], plans: [], availableTerms: [] };
   
-  const MAX_COURSES_PER_SEMESTER = 6;
+  const MAX_COURSES_PER_SEMESTER = typeof maxPerSemester === 'number' && !isNaN(maxPerSemester) ? Math.max(1, Math.floor(maxPerSemester)) : 6;
   
   // Determine semester identifiers from availableTerms
   // Handle case where there might be only one term or more than two

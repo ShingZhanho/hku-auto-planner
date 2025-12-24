@@ -233,6 +233,57 @@
   background-color: #5a6268;
 }
 
+/* Toggle switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+}
+.switch input { display: none; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .2s;
+  border-radius: 28px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  top: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.switch input:checked + .slider {
+  background-color: #4caf50;
+}
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* Input error badge (matches clear-all styling but compact) */
+.input-error-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-left: 12px;
+}
+
 .blockout-button {
   background-color: #7c3aed;
   color: white;

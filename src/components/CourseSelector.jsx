@@ -1,10 +1,22 @@
 import { useState, useMemo, useEffect } from 'react';
 import './CourseSelector.css';
 
-function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange }) {
+function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
+  const [localInputError, setLocalInputError] = useState('');
+  const [localInputValue, setLocalInputValue] = useState('');
 
-  const MAX_COURSES = 12;
+  useEffect(() => {
+    if (overloadEnabled) {
+      setLocalInputValue(String(maxPerSemester || ''));
+    } else {
+      setLocalInputValue('');
+      setLocalInputError('');
+    }
+  }, [overloadEnabled, maxPerSemester]);
+
+  const MAX_TOTAL_COURSES = 12;
+  const MAX_PER_SEMESTER = overloadEnabled ? maxPerSemester : 6;
 
   // Memoize filtered courses to avoid recalculating on every render
   const filteredCourses = useMemo(() => {
@@ -33,14 +45,67 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
   const handleSectionSelection = (course, section, mode, term = null) => {
     const isSelectedCourse = selectedCourses.find(c => c.courseCode === course.courseCode);
     
-    // Check if adding a new course would exceed the limit
-    if (!isSelectedCourse && selectedCourses.length >= MAX_COURSES) {
-      alert(`You can select at most ${MAX_COURSES} courses.`);
+    // Check total courses cap first
+    if (!isSelectedCourse && selectedCourses.length >= MAX_TOTAL_COURSES) {
+      alert(`You can select at most ${MAX_TOTAL_COURSES} courses.`);
       return;
     }
+
+    // Helper: count courses per term based on selectedSections
+    const computeTermCounts = (coursesList) => {
+      const counts = {};
+      coursesList.forEach(c => {
+        const termsWithSelection = new Set();
+        (c.selectedSections || []).forEach(sec => {
+          for (const t of c.terms || []) {
+            const groupKey = `${c.courseCode}-${t}`;
+            if (coursesData.grouped[groupKey] && coursesData.grouped[groupKey].sections[sec]) {
+              termsWithSelection.add(t);
+            }
+          }
+        });
+        termsWithSelection.forEach(t => {
+          counts[t] = (counts[t] || 0) + 1;
+        });
+      });
+      return counts;
+    };
+
+    // Determine terms that would be affected by this selection action
+    const determineAffectedTermsForCourse = (targetCourse, selectedSecs) => {
+      const affected = new Set();
+      (selectedSecs || []).forEach(sec => {
+        for (const t of targetCourse.terms || []) {
+          const groupKey = `${targetCourse.courseCode}-${t}`;
+          if (coursesData.grouped[groupKey] && coursesData.grouped[groupKey].sections[sec]) {
+            affected.add(t);
+          }
+        }
+      });
+      return Array.from(affected);
+    };
+
+    const currentCounts = computeTermCounts(selectedCourses);
     
     if (mode === 'any') {
       // Toggle all sections
+      const allSections = course.sections || [];
+      const targetTerms = determineAffectedTermsForCourse(course, allSections);
+
+      if (!overloadEnabled) {
+        // If enabling all would push any term over the per-sem limit, block
+        const projected = { ...currentCounts };
+        targetTerms.forEach(t => {
+          projected[t] = (projected[t] || 0) + (isSelectedCourse && (isSelectedCourse.selectedSections || []).length > 0 ? 0 : 1);
+        });
+        for (const t of targetTerms) {
+          if ((projected[t] || 0) > MAX_PER_SEMESTER) {
+            alert(`Cannot select this course: selecting subclasses would exceed ${MAX_PER_SEMESTER} courses in ${t}. Enable overload to allow more.`);
+            return;
+          }
+        }
+      }
+
       if (isSelectedCourse && isSelectedCourse.selectedSections.length === course.sections.length) {
         // If all are selected, deselect all
         onCourseRemove(course.courseCode);
@@ -56,7 +121,16 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         : [];
       
       if (termSections.length === 0) return;
-      
+      // Check per-sem limit for this term
+      if (!overloadEnabled && !isSelectedCourse) {
+        const projected = { ...currentCounts };
+        projected[term] = (projected[term] || 0) + 1;
+        if (projected[term] > MAX_PER_SEMESTER) {
+          alert(`Cannot select these subclasses: selecting would exceed ${MAX_PER_SEMESTER} courses in ${term}. Enable overload to allow more.`);
+          return;
+        }
+      }
+
       if (isSelectedCourse) {
         const currentSections = Array.isArray(isSelectedCourse.selectedSections) 
           ? isSelectedCourse.selectedSections 
@@ -103,6 +177,23 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         }
       } else {
         // First selection
+        // Check which term this section belongs to
+        let sectionTerm = null;
+        for (const t of course.terms || []) {
+          const groupKey = `${course.courseCode}-${t}`;
+          if (coursesData.grouped[groupKey] && coursesData.grouped[groupKey].sections[section]) {
+            sectionTerm = t;
+            break;
+          }
+        }
+        if (!overloadEnabled && sectionTerm) {
+          const projected = { ...currentCounts };
+          projected[sectionTerm] = (projected[sectionTerm] || 0) + 1;
+          if (projected[sectionTerm] > MAX_PER_SEMESTER) {
+            alert(`Cannot select this subclass: selecting would exceed ${MAX_PER_SEMESTER} courses in ${sectionTerm}. Enable overload to allow more.`);
+            return;
+          }
+        }
         newSections = [section];
       }
       
@@ -155,7 +246,43 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         <div className="selector-header">
           <h2>Search Courses</h2>
           <p className="info-text">
-            {coursesData.totalCourses} courses available · {selectedCourses.length}/{MAX_COURSES} selected
+            {coursesData.totalCourses} courses available · {selectedCourses.length}/{MAX_TOTAL_COURSES} selected
+            {overloadEnabled && (
+              <span style={{ marginLeft: '1rem', fontSize: '0.9rem' }}>
+                Max per semester:
+                <input
+                  type="number"
+                  min={7}
+                  max={11}
+                  value={localInputValue}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setLocalInputValue(raw);
+
+                    if (raw.trim() === '') {
+                      setLocalInputError('Please enter a number.');
+                      return;
+                    }
+
+                    const parsed = parseInt(raw, 10);
+                    if (!isNaN(parsed)) {
+                      if (parsed > 6 && parsed < 12) {
+                        setMaxPerSemester(parsed);
+                        setLocalInputError('');
+                      } else {
+                        setLocalInputError('Please enter an integer between 7 and 11.');
+                      }
+                    } else {
+                      setLocalInputError('Please enter a number.');
+                    }
+                  }}
+                  style={{ width: '4rem', marginLeft: '0.5rem' }}
+                />
+                {localInputError && (
+                  <div className="input-error-badge">{localInputError}</div>
+                )}
+              </span>
+            )}
           </p>
           <input
             type="text"
