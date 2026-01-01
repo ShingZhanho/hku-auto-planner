@@ -1,10 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import './CourseSelector.css';
+import OverloadModal from './OverloadModal';
 
-function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {} }) {
+function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [localInputError, setLocalInputError] = useState('');
   const [localInputValue, setLocalInputValue] = useState('');
+  const [showOverloadModal, setShowOverloadModal] = useState(false);
 
   useEffect(() => {
     if (overloadEnabled) {
@@ -45,8 +47,8 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
   const handleSectionSelection = (course, section, mode, term = null) => {
     const isSelectedCourse = selectedCourses.find(c => c.courseCode === course.courseCode);
     
-    // Check total courses cap first
-    if (!isSelectedCourse && selectedCourses.length >= MAX_TOTAL_COURSES) {
+    // Check total courses cap first (only when overload is disabled)
+    if (!isSelectedCourse && !overloadEnabled && selectedCourses.length >= MAX_TOTAL_COURSES) {
       alert(`You can select at most ${MAX_TOTAL_COURSES} courses.`);
       return;
     }
@@ -246,7 +248,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         <div className="selector-header">
           <h2>Search Courses</h2>
           <p className="info-text">
-            {coursesData.totalCourses} courses available · {selectedCourses.length}/{MAX_TOTAL_COURSES} selected
+            {coursesData.totalCourses} courses available · {selectedCourses.length}{!overloadEnabled && `/${MAX_TOTAL_COURSES}`} selected
             {overloadEnabled && (
               <span style={{ marginLeft: '1rem', fontSize: '0.9rem' }}>
                 Max per semester:
@@ -483,6 +485,15 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
               );
             }
           })()}
+          {/* Overload Options button - only appears during course selection stage */}
+          <button
+            className="cart-clear-btn-secondary"
+            onClick={() => setShowOverloadModal(true)}
+            title="Open overload options"
+            style={{ marginLeft: '0.5rem' }}
+          >
+            Overload Options
+          </button>
         </div>
 
         <div className="cart-content">
@@ -630,6 +641,16 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         </div>
       </div>
     </div>
+    {showOverloadModal && (
+      <OverloadModal
+        isOpen={showOverloadModal}
+        onClose={() => setShowOverloadModal(false)}
+        overloadEnabled={overloadEnabled}
+        setOverloadEnabled={setOverloadEnabled}
+        maxPerSemester={maxPerSemester}
+        setMaxPerSemester={setMaxPerSemester}
+      />
+    )}
     </div>
   );
 }

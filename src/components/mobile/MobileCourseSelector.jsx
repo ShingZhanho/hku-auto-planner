@@ -1,10 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import OverloadModal from '../OverloadModal';
 import './MobileCourseSelector.css';
 
-function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, searchTerm, onSearchChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {} }) {
+function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, searchTerm, onSearchChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [localError, setLocalError] = useState('');
   const [localInputValue, setLocalInputValue] = useState('');
+  const [showOverloadModal, setShowOverloadModal] = useState(false);
 
   useEffect(() => {
     if (overloadEnabled) {
@@ -41,8 +43,8 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
 
   const handleSectionSelection = (course, section, mode, term = null) => {
     const existingCourse = selectedCourses.find(c => c.courseCode === course.courseCode);
-    // Total cap
-    if (!existingCourse && selectedCourses.length >= MAX_TOTAL_COURSES) {
+    // Total cap (only enforce when overload is disabled)
+    if (!existingCourse && !overloadEnabled && selectedCourses.length >= MAX_TOTAL_COURSES) {
       alert(`You can select at most ${MAX_TOTAL_COURSES} courses.`);
       return;
     }
@@ -235,6 +237,15 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
             )}
           </div>
         )}
+        <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            className="cart-clear-btn-secondary"
+            onClick={() => setShowOverloadModal(true)}
+            style={{ padding: '6px 10px' }}
+          >
+            Overload Options
+          </button>
+        </div>
       </div>
 
       <div className="mobile-courses-list">
@@ -353,6 +364,16 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
           })
         )}
       </div>
+      {showOverloadModal && (
+        <OverloadModal
+          isOpen={showOverloadModal}
+          onClose={() => setShowOverloadModal(false)}
+          overloadEnabled={overloadEnabled}
+          setOverloadEnabled={setOverloadEnabled}
+          maxPerSemester={maxPerSemester}
+          setMaxPerSemester={setMaxPerSemester}
+        />
+      )}
     </div>
   );
 }

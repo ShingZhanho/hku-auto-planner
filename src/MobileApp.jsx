@@ -140,7 +140,7 @@ function MobileApp() {
           processedData.grouped, 
           processedData.availableTerms, 
           blockouts,
-          overloadEnabled ? maxPerSemester : 6
+              overloadEnabled ? maxPerSemester : 6 // No-op placeholder to ensure overwrite context remains consistent
         );
         
         if (schedules.plans.length === 0) {
@@ -256,9 +256,10 @@ function MobileApp() {
             <MobileCourseSelector 
             coursesData={processedData}
             selectedCourses={selectedCourses}
-                overloadEnabled={overloadEnabled}
-                maxPerSemester={maxPerSemester}
-                setMaxPerSemester={setMaxPerSemester}
+              overloadEnabled={overloadEnabled}
+              maxPerSemester={maxPerSemester}
+              setMaxPerSemester={setMaxPerSemester}
+              setOverloadEnabled={setOverloadEnabled}
                 onCourseSelect={handleCourseSelect}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}

@@ -211,7 +211,7 @@ function App() {
       return;
     }
 
-    if (selectedCourses.length > MAX_COURSES) {
+    if (!overloadEnabled && selectedCourses.length > MAX_COURSES) {
       setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
       setTimeout(() => setErrorMessage(''), 5000);
       return;
@@ -399,14 +399,7 @@ function App() {
           <h1>HKU Course Planner <span className="beta-badge" title="This is a beta version and may contain bugs or incomplete features.">BETA</span></h1>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <ThemeToggle />
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <label style={{ fontWeight: 600, color: 'var(--text-secondary)', marginRight: '6px' }}>Overload</label>
-              <label className="switch" title="Toggle overload mode">
-                <input type="checkbox" checked={overloadEnabled} onChange={(e) => setOverloadEnabled(e.target.checked)} />
-                <span className="slider"></span>
-              </label>
-            </div>
-              <a 
+            <a 
               href="https://github.com/ShingZhanho/hku-auto-planner#readme" 
               target="_blank" 
               rel="noopener noreferrer"
@@ -438,6 +431,7 @@ function App() {
               onCourseRemove={handleCourseRemove}
               overloadEnabled={overloadEnabled}
               maxPerSemester={maxPerSemester}
+              setOverloadEnabled={setOverloadEnabled}
               setMaxPerSemester={setMaxPerSemester}
               blockouts={blockouts}
               onRemoveBlockout={handleRemoveBlockout}

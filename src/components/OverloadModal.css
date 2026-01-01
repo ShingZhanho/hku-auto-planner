@@ -1,0 +1,26 @@
+.overload-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.overload-modal {
+  width: 420px;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.overload-modal-title {
+  margin: 0 0 10px 0;
+}
+.overload-modal-body { margin: 8px 0 14px 0; }
+.overload-row { display: flex; align-items: center; margin: 8px 0; }
+.overload-input { width: 80px; padding: 6px; border-radius: 6px; border: 1px solid var(--muted); }
+.overload-error { color: var(--danger); margin-top: 6px; }
+.overload-modal-actions { display:flex; justify-content:flex-end; gap:8px; }
+.modal-btn { padding: 8px 12px; border-radius: 6px; border: none; background: var(--muted); color: var(--text); }
+.modal-btn.primary { background: var(--accent); color: white; }
