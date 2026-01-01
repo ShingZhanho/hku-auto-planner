@@ -103,6 +103,69 @@
   font-weight: 600;
 }
 
+.mobile-overload-container {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-overload-btn {
+  padding: 6px 10px;
+  background-color: transparent;
+  color: #7c3aed;
+  border: 1px solid #7c3aed;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.mobile-overload-btn:active {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.mobile-overload-inline-container {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.mobile-overload-inline-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.mobile-overload-inline-label {
+  font-size: 0.9rem;
+}
+
+.mobile-overload-inline-input {
+  width: 4rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.mobile-overload-inline-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.input-error-badge {
+  color: #dc3545;
+  font-size: 0.75rem;
+}
+
 .mobile-expand-btn {
   background: rgba(0, 0, 0, 0.05);
   border: none;

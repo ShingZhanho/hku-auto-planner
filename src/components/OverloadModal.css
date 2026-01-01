@@ -1,0 +1,153 @@
+.overload-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.overload-modal {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+}
+
+.overload-modal-title {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.overload-modal-body {
+  margin: 1rem 0 1.5rem 0;
+}
+
+.overload-row {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.overload-checkbox-label {
+  margin-left: 8px;
+}
+
+.overload-label {
+  min-width: 160px;
+  display: inline-block;
+  font-weight: 600;
+  color: #333;
+}
+
+.overload-input {
+  width: 80px;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.overload-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.overload-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.overload-error {
+  color: #dc3545;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.overload-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.overload-btn-cancel,
+.overload-btn-save {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.overload-btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.overload-btn-cancel:hover {
+  background-color: #d0d0d0;
+}
+
+.overload-btn-save {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.overload-btn-save:hover {
+  background-color: #6d28d9;
+}
+
+.overload-btn-save:active {
+  background-color: #5b21b6;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .overload-modal {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .overload-modal-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .overload-label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .overload-input {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: #555555;
+}
+
+[data-theme="dark"] .overload-input:focus {
+  border-color: #7c3aed;
+}
+
+[data-theme="dark"] .overload-input:disabled {
+  background-color: #2a2a2a;
+}
+
+[data-theme="dark"] .overload-btn-cancel {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid #555555;
+}
+
+[data-theme="dark"] .overload-btn-cancel:hover {
+  background-color: #404040;
+}

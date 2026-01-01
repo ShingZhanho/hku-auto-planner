@@ -24,6 +24,33 @@ function MobileApp() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
   
+  // Initialize overload settings from localStorage synchronously
+  const [overloadEnabled, setOverloadEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_overload');
+      console.log('[MobileApp] Initializing overload from localStorage:', stored);
+      return stored === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  
+  const [maxPerSemester, setMaxPerSemester] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_max_per_semester');
+      console.log('[MobileApp] Initializing maxPerSemester from localStorage:', stored);
+      if (stored !== null) {
+        const v = parseInt(stored, 10);
+        if (!isNaN(v) && v >= 6 && v < 12) {
+          return v;
+        }
+      }
+      return 6;
+    } catch (e) {
+      return 6;
+    }
+  });
+  
   // Menu states
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isCartMenuOpen, setIsCartMenuOpen] = useState(false);
@@ -48,6 +75,39 @@ function MobileApp() {
       saveShoppingCart(dataHash, selectedCourses, blockouts);
     }
   }, [selectedCourses, blockouts, dataHash, processedData]);
+
+  // Persist overload preference to localStorage
+  useEffect(() => {
+    try {
+      console.log('[MobileApp] Saving overload to localStorage:', overloadEnabled);
+      localStorage.setItem('hku_planner_overload', overloadEnabled ? 'true' : 'false');
+    } catch (e) {
+      // ignore
+    }
+  }, [overloadEnabled]);
+
+  // Persist max per semester to localStorage
+  useEffect(() => {
+    try {
+      console.log('[MobileApp] Saving maxPerSemester to localStorage:', maxPerSemester);
+      localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
+    } catch (e) {}
+  }, [maxPerSemester]);
+
+  // Ensure when overload is enabled the maxPerSemester is in valid range
+  useEffect(() => {
+    if (overloadEnabled) {
+      if (!(maxPerSemester > 6 && maxPerSemester < 12)) {
+        setMaxPerSemester(7);
+      }
+    }
+  }, [overloadEnabled]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
+    } catch (e) {}
+  }, [maxPerSemester]);
 
   const handleDataLoaded = (data) => {
     setCourseData(data);
@@ -109,7 +169,8 @@ function MobileApp() {
           selectedCourses, 
           processedData.grouped, 
           processedData.availableTerms, 
-          blockouts
+          blockouts,
+              overloadEnabled ? maxPerSemester : 6 // No-op placeholder to ensure overwrite context remains consistent
         );
         
         if (schedules.plans.length === 0) {
@@ -215,10 +276,14 @@ function MobileApp() {
         )}
 
         {!isLoading && view === 'select' && processedData && (
-          <MobileCourseSelector 
+            <MobileCourseSelector 
             coursesData={processedData}
             selectedCourses={selectedCourses}
-            onCourseSelect={handleCourseSelect}
+              overloadEnabled={overloadEnabled}
+              maxPerSemester={maxPerSemester}
+              setMaxPerSemester={setMaxPerSemester}
+              setOverloadEnabled={setOverloadEnabled}
+                onCourseSelect={handleCourseSelect}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
           />

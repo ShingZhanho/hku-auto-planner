@@ -24,8 +24,36 @@ function App() {
   const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
   const [editingBlockout, setEditingBlockout] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isOverloadModalOpen, setIsOverloadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
+  
+  // Initialize overload settings from localStorage synchronously
+  const [overloadEnabled, setOverloadEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_overload');
+      console.log('Initializing overload from localStorage:', stored);
+      return stored === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  
+  const [maxPerSemester, setMaxPerSemester] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_max_per_semester');
+      console.log('Initializing maxPerSemester from localStorage:', stored);
+      if (stored !== null) {
+        const v = parseInt(stored, 10);
+        if (!isNaN(v) && v >= 6 && v < 12) {
+          return v;
+        }
+      }
+      return 6;
+    } catch (e) {
+      return 6;
+    }
+  });
 
   // Memoize selected plan schedule to prevent unnecessary re-renders
   const selectedPlanSchedule = useMemo(() => {
@@ -43,6 +71,31 @@ function App() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Persist overload preference to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('hku_planner_overload', overloadEnabled ? 'true' : 'false');
+    } catch (e) {
+      // ignore
+    }
+  }, [overloadEnabled]);
+
+  // Persist max per semester to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
+    } catch (e) {}
+  }, [maxPerSemester]);
+
+  // Ensure when overload is enabled the maxPerSemester is in valid range
+  useEffect(() => {
+    if (overloadEnabled) {
+      if (!(maxPerSemester > 6 && maxPerSemester < 12)) {
+        setMaxPerSemester(7);
+      }
+    }
+  }, [overloadEnabled]);
 
   // Save shopping cart to cookies whenever it changes
   useEffect(() => {
@@ -160,8 +213,37 @@ function App() {
       return;
     }
 
-    if (selectedCourses.length > MAX_COURSES) {
+    if (!overloadEnabled && selectedCourses.length > MAX_COURSES) {
       setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
+      setTimeout(() => setErrorMessage(''), 5000);
+      return;
+    }
+
+    // Provide a clearer, customized prompt when the selection exceeds
+    // the per-semester limits (either because overload is disabled
+    // or because the configured per-semester cap is too low for the
+    // current selection).
+    const numTerms = processedData?.availableTerms?.length || 2;
+    const perSemesterLimit = overloadEnabled ? maxPerSemester : 6;
+    const allowedTotalByPerSem = perSemesterLimit * numTerms;
+    if (selectedCourses.length > allowedTotalByPerSem) {
+      if (!overloadEnabled) {
+        setErrorMessage(
+          `Overload is disabled. You may select up to ${perSemesterLimit} courses per semester (${allowedTotalByPerSem} total). ` +
+          `Please remove some courses or enable Overload to increase the per-semester limit.`
+        );
+      } else {
+        setErrorMessage(
+          `Your selection of ${selectedCourses.length} courses exceeds the configured per-semester maximum of ${maxPerSemester} across ${numTerms} semesters (allowing ${allowedTotalByPerSem} courses total). ` +
+          `Please reduce selected courses or increase "Max per semester".`
+        );
+      }
+      setTimeout(() => setErrorMessage(''), 7000);
+      return;
+    }
+
+    if (overloadEnabled && !(maxPerSemester > 6 && maxPerSemester < 12)) {
+      setErrorMessage('When overload is enabled, "Max per semester" must be an integer between 7 and 11.');
       setTimeout(() => setErrorMessage(''), 5000);
       return;
     }
@@ -187,7 +269,7 @@ function App() {
           firstSectionSessions: processedData.grouped[key].sections[Object.keys(processedData.grouped[key].sections)[0]]
         })));
         
-        const result = generateSchedules(selectedCourses, processedData.grouped, processedData.availableTerms, blockouts);
+        const result = generateSchedules(selectedCourses, processedData.grouped, processedData.availableTerms, blockouts, overloadEnabled ? maxPerSemester : 6);
         
         console.log(`Generated ${result.schedules.length} possible schedules`);
         console.log(`Total plans: ${result.plans.length}`);
@@ -269,8 +351,12 @@ function App() {
         if (import.meta.env.DEV) {
           console.error('Error generating schedules:', error);
         }
-        setErrorMessage('An error occurred while generating schedules. Please try again.');
-        setTimeout(() => setErrorMessage(''), 5000);
+        // More helpful guidance for users when generateSchedules throws.
+        setErrorMessage(
+          'An error occurred while generating schedules. This can happen when the selected courses exceed per-semester limits or due to an internal error. ' +
+          'Please check the Overload setting and "Max per semester", reduce the number of selected courses, or try enabling Overload.'
+        );
+        setTimeout(() => setErrorMessage(''), 8000);
         setSolutions(null);
         setSelectedPlanIndex(null);
       } finally {
@@ -345,6 +431,10 @@ function App() {
               selectedCourses={selectedCourses}
               onCourseSelect={handleCourseSelect}
               onCourseRemove={handleCourseRemove}
+              overloadEnabled={overloadEnabled}
+              maxPerSemester={maxPerSemester}
+              setOverloadEnabled={setOverloadEnabled}
+              setMaxPerSemester={setMaxPerSemester}
               blockouts={blockouts}
               onRemoveBlockout={handleRemoveBlockout}
               onEditBlockout={handleEditBlockout}
@@ -353,6 +443,8 @@ function App() {
               onClearAllBlockouts={handleClearAllBlockouts}
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
+              isOverloadModalOpen={isOverloadModalOpen}
+              setIsOverloadModalOpen={setIsOverloadModalOpen}
             />
             {errorMessage && (
               <div className="error-message">
@@ -386,6 +478,9 @@ function App() {
             </button>
           )}
           <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+            <button className="overload-options-button" onClick={() => setIsOverloadModalOpen(true)}>
+              Overload Options
+            </button>
             <button className="blockout-button" onClick={() => setIsBlockoutModalOpen(true)}>
               Add Blockout
             </button>
