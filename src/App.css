@@ -284,6 +284,28 @@
   margin-left: 12px;
 }
 
+.overload-options-button {
+  background-color: transparent;
+  color: #7c3aed;
+  border: 2px solid #7c3aed;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.overload-options-button:hover {
+  background-color: #7c3aed;
+  color: white;
+}
+
+.overload-options-button:active {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+}
+
 .blockout-button {
   background-color: #7c3aed;
   color: white;

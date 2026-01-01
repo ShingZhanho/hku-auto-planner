@@ -2,20 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import './CourseSelector.css';
 import OverloadModal from './OverloadModal';
 
-function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
+function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {}, isOverloadModalOpen = false, setIsOverloadModalOpen = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
-  const [localInputError, setLocalInputError] = useState('');
-  const [localInputValue, setLocalInputValue] = useState('');
-  const [showOverloadModal, setShowOverloadModal] = useState(false);
-
-  useEffect(() => {
-    if (overloadEnabled) {
-      setLocalInputValue(String(maxPerSemester || ''));
-    } else {
-      setLocalInputValue('');
-      setLocalInputError('');
-    }
-  }, [overloadEnabled, maxPerSemester]);
 
   const MAX_TOTAL_COURSES = 12;
   const MAX_PER_SEMESTER = overloadEnabled ? maxPerSemester : 6;
@@ -249,42 +237,6 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
           <h2>Search Courses</h2>
           <p className="info-text">
             {coursesData.totalCourses} courses available · {selectedCourses.length}{!overloadEnabled && `/${MAX_TOTAL_COURSES}`} selected
-            {overloadEnabled && (
-              <span className="overload-info-inline">
-                Max per semester:
-                <input
-                  type="number"
-                  className="overload-inline-input"
-                  min={7}
-                  max={11}
-                  value={localInputValue}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    setLocalInputValue(raw);
-
-                    if (raw.trim() === '') {
-                      setLocalInputError('Please enter a number.');
-                      return;
-                    }
-
-                    const parsed = parseInt(raw, 10);
-                    if (!isNaN(parsed)) {
-                      if (parsed > 6 && parsed < 12) {
-                        setMaxPerSemester(parsed);
-                        setLocalInputError('');
-                      } else {
-                        setLocalInputError('Please enter an integer between 7 and 11.');
-                      }
-                    } else {
-                      setLocalInputError('Please enter a number.');
-                    }
-                  }}
-                />
-                {localInputError && (
-                  <div className="input-error-badge">{localInputError}</div>
-                )}
-              </span>
-            )}
           </p>
           <input
             type="text"
@@ -485,14 +437,6 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
               );
             }
           })()}
-          {/* Overload Options button - only appears during course selection stage */}
-          <button
-            className="cart-overload-btn"
-            onClick={() => setShowOverloadModal(true)}
-            title="Open overload options"
-          >
-            Overload Options
-          </button>
         </div>
 
         <div className="cart-content">
@@ -640,14 +584,15 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         </div>
       </div>
     </div>
-    {showOverloadModal && (
+    {isOverloadModalOpen && (
       <OverloadModal
-        isOpen={showOverloadModal}
-        onClose={() => setShowOverloadModal(false)}
+        isOpen={isOverloadModalOpen}
+        onClose={() => setIsOverloadModalOpen(false)}
         overloadEnabled={overloadEnabled}
         setOverloadEnabled={setOverloadEnabled}
         maxPerSemester={maxPerSemester}
         setMaxPerSemester={setMaxPerSemester}
+        selectedCourses={selectedCourses}
       />
     )}
     </div>

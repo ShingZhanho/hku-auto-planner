@@ -4,18 +4,7 @@ import './MobileCourseSelector.css';
 
 function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, searchTerm, onSearchChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
-  const [localError, setLocalError] = useState('');
-  const [localInputValue, setLocalInputValue] = useState('');
   const [showOverloadModal, setShowOverloadModal] = useState(false);
-
-  useEffect(() => {
-    if (overloadEnabled) {
-      setLocalInputValue(String(maxPerSemester || ''));
-    } else {
-      setLocalInputValue('');
-      setLocalError('');
-    }
-  }, [overloadEnabled, maxPerSemester]);
 
   const MAX_TOTAL_COURSES = 12;
   const MAX_PER_SEMESTER = maxPerSemester;
@@ -199,44 +188,6 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
           onChange={(e) => onSearchChange(e.target.value)}
           className="mobile-search-input"
         />
-        {overloadEnabled && (
-          <div className="mobile-overload-inline-container">
-            <div className="mobile-overload-inline-row">
-              <label className="mobile-overload-inline-label">Max per semester:</label>
-              <input
-                type="number"
-                className="mobile-overload-inline-input"
-                min={7}
-                max={11}
-                value={localInputValue}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  setLocalInputValue(raw);
-
-                  if (raw.trim() === '') {
-                    setLocalError('Please enter a number.');
-                    return;
-                  }
-
-                  const v = parseInt(raw, 10);
-                  if (!isNaN(v)) {
-                    if (v > 6 && v < 12) {
-                      setMaxPerSemester(v);
-                      setLocalError('');
-                    } else {
-                      setLocalError('Please enter an integer between 7 and 11.');
-                    }
-                  } else {
-                    setLocalError('Please enter a number.');
-                  }
-                }}
-              />
-            </div>
-            {localError && (
-              <div className="input-error-badge">{localError}</div>
-            )}
-          </div>
-        )}
         <div className="mobile-overload-container">
           <button
             className="mobile-overload-btn"
@@ -371,6 +322,7 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
           setOverloadEnabled={setOverloadEnabled}
           maxPerSemester={maxPerSemester}
           setMaxPerSemester={setMaxPerSemester}
+          selectedCourses={selectedCourses}
         />
       )}
     </div>

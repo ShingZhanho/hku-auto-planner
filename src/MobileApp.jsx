@@ -23,8 +23,33 @@ function MobileApp() {
   const [blockouts, setBlockouts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
-  const [overloadEnabled, setOverloadEnabled] = useState(false);
-  const [maxPerSemester, setMaxPerSemester] = useState(6);
+  
+  // Initialize overload settings from localStorage synchronously
+  const [overloadEnabled, setOverloadEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_overload');
+      console.log('[MobileApp] Initializing overload from localStorage:', stored);
+      return stored === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  
+  const [maxPerSemester, setMaxPerSemester] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_max_per_semester');
+      console.log('[MobileApp] Initializing maxPerSemester from localStorage:', stored);
+      if (stored !== null) {
+        const v = parseInt(stored, 10);
+        if (!isNaN(v) && v >= 6 && v < 12) {
+          return v;
+        }
+      }
+      return 6;
+    } catch (e) {
+      return 6;
+    }
+  });
   
   // Menu states
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
@@ -51,27 +76,32 @@ function MobileApp() {
     }
   }, [selectedCourses, blockouts, dataHash, processedData]);
 
-  // Load overload preference from localStorage
+  // Persist overload preference to localStorage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('hku_planner_overload');
-      if (stored !== null) setOverloadEnabled(stored === 'true');
-    } catch (e) {}
-  }, []);
-
-  useEffect(() => {
-    try {
+      console.log('[MobileApp] Saving overload to localStorage:', overloadEnabled);
       localStorage.setItem('hku_planner_overload', overloadEnabled ? 'true' : 'false');
-    } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
   }, [overloadEnabled]);
 
-  // Load/save max per semester for mobile
+  // Persist max per semester to localStorage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('hku_planner_max_per_semester');
-      if (stored !== null) setMaxPerSemester(parseInt(stored, 10) || 6);
+      console.log('[MobileApp] Saving maxPerSemester to localStorage:', maxPerSemester);
+      localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
     } catch (e) {}
-  }, []);
+  }, [maxPerSemester]);
+
+  // Ensure when overload is enabled the maxPerSemester is in valid range
+  useEffect(() => {
+    if (overloadEnabled) {
+      if (!(maxPerSemester > 6 && maxPerSemester < 12)) {
+        setMaxPerSemester(7);
+      }
+    }
+  }, [overloadEnabled]);
 
   useEffect(() => {
     try {
@@ -191,13 +221,6 @@ function MobileApp() {
           <h1 className="mobile-title">
             HKU Course Planner <span className="beta-badge">BETA</span>
           </h1>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Overload</label>
-            <label className="switch" title="Toggle overload mode">
-              <input type="checkbox" checked={overloadEnabled} onChange={(e) => setOverloadEnabled(e.target.checked)} />
-              <span className="slider"></span>
-            </label>
-          </div>
           
           {view === 'select' && (
             <button 

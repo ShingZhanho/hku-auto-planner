@@ -24,10 +24,36 @@ function App() {
   const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
   const [editingBlockout, setEditingBlockout] = useState(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isOverloadModalOpen, setIsOverloadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
-  const [overloadEnabled, setOverloadEnabled] = useState(false);
-  const [maxPerSemester, setMaxPerSemester] = useState(6);
+  
+  // Initialize overload settings from localStorage synchronously
+  const [overloadEnabled, setOverloadEnabled] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_overload');
+      console.log('Initializing overload from localStorage:', stored);
+      return stored === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  
+  const [maxPerSemester, setMaxPerSemester] = useState(() => {
+    try {
+      const stored = localStorage.getItem('hku_planner_max_per_semester');
+      console.log('Initializing maxPerSemester from localStorage:', stored);
+      if (stored !== null) {
+        const v = parseInt(stored, 10);
+        if (!isNaN(v) && v >= 6 && v < 12) {
+          return v;
+        }
+      }
+      return 6;
+    } catch (e) {
+      return 6;
+    }
+  });
 
   // Memoize selected plan schedule to prevent unnecessary re-renders
   const selectedPlanSchedule = useMemo(() => {
@@ -46,19 +72,7 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load overload preference from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('hku_planner_overload');
-      if (stored !== null) {
-        setOverloadEnabled(stored === 'true');
-      }
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  // Persist overload preference
+  // Persist overload preference to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('hku_planner_overload', overloadEnabled ? 'true' : 'false');
@@ -67,19 +81,7 @@ function App() {
     }
   }, [overloadEnabled]);
 
-  // Load/save max per semester
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('hku_planner_max_per_semester');
-      if (stored !== null) {
-        const v = parseInt(stored, 10);
-        if (!isNaN(v) && v > 6 && v < 12) {
-          setMaxPerSemester(v);
-        }
-      }
-    } catch (e) {}
-  }, []);
-
+  // Persist max per semester to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('hku_planner_max_per_semester', String(maxPerSemester));
@@ -441,6 +443,8 @@ function App() {
               onClearAllBlockouts={handleClearAllBlockouts}
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
+              isOverloadModalOpen={isOverloadModalOpen}
+              setIsOverloadModalOpen={setIsOverloadModalOpen}
             />
             {errorMessage && (
               <div className="error-message">
@@ -474,6 +478,9 @@ function App() {
             </button>
           )}
           <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+            <button className="overload-options-button" onClick={() => setIsOverloadModalOpen(true)}>
+              Overload Options
+            </button>
             <button className="blockout-button" onClick={() => setIsBlockoutModalOpen(true)}>
               Add Blockout
             </button>
