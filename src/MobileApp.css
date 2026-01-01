@@ -46,7 +46,7 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
-.cart-badge {
+.mobile-cart-btn .cart-badge {
   position: absolute;
   top: -4px;
   color: white;
@@ -56,12 +56,12 @@
   font-weight: bold;
 }
 
-.cart-badge-courses {
+.mobile-cart-btn .cart-badge-courses {
   right: -4px;
   background: #dc3545;
 }
 
-.cart-badge-blockouts {
+.mobile-cart-btn .cart-badge-blockouts {
   right: -4px;
   top: auto;
   bottom: -4px;

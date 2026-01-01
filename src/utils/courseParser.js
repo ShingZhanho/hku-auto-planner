@@ -231,7 +231,7 @@ export const getUniqueCourses = (groupedData) => {
             }
           });
           
-          classTime = timeParts.join('; ');
+          classTime = timeParts.length > 0 ? timeParts.join('; ') : null;
         }
       }
       

@@ -138,13 +138,13 @@
 }
 
 .cart-course-actions,
-.cart-blockout-actions {
+.mobile-cart-menu .cart-blockout-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
-.cart-edit-btn {
+.mobile-cart-menu .cart-edit-btn {
   background: rgba(0, 123, 255, 0.1);
   color: #007bff;
   border: none;
@@ -161,11 +161,11 @@
   flex-shrink: 0;
 }
 
-.cart-edit-btn:hover {
+.mobile-cart-menu .cart-edit-btn:hover {
   background: rgba(0, 123, 255, 0.2);
 }
 
-.cart-remove-btn {
+.mobile-cart-menu .cart-remove-btn {
   background: rgba(220, 53, 69, 0.1);
   color: #dc3545;
   border: none;
@@ -182,11 +182,11 @@
   flex-shrink: 0;
 }
 
-.cart-remove-btn:hover {
+.mobile-cart-menu .cart-remove-btn:hover {
   background: rgba(220, 53, 69, 0.2);
 }
 
-.cart-blockout-item {
+.mobile-cart-menu .cart-blockout-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -197,37 +197,37 @@
   gap: 0.75rem;
 }
 
-.cart-blockout-info {
+.mobile-cart-menu .cart-blockout-info {
   flex: 1;
   min-width: 0;
 }
 
-.cart-blockout-name {
+.mobile-cart-menu .cart-blockout-name {
   margin: 0 0 0.25rem 0;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.cart-blockout-details {
+.mobile-cart-menu .cart-blockout-details {
   margin: 0 0 0.25rem 0;
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
-.cart-blockout-time {
+.mobile-cart-menu .cart-blockout-time {
   margin: 0;
   font-size: 0.85rem;
   color: var(--text-primary);
 }
 
-.cart-blockout-actions {
+.mobile-cart-menu .cart-blockout-actions {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
 }
 
-.cart-edit-btn {
+.mobile-cart-menu .cart-edit-btn {
   background: rgba(0, 123, 255, 0.1);
   color: #007bff;
   border: none;
@@ -243,7 +243,7 @@
   transition: background-color 0.2s;
 }
 
-.cart-edit-btn:hover {
+.mobile-cart-menu .cart-edit-btn:hover {
   background: rgba(0, 123, 255, 0.2);
 }
 
@@ -266,16 +266,16 @@
 }
 
 [data-theme="dark"] .cart-course-item,
-[data-theme="dark"] .cart-blockout-item {
+[data-theme="dark"] .mobile-cart-menu .cart-blockout-item {
   background: var(--bg-tertiary);
   border-color: #555555;
 }
 
-[data-theme="dark"] .cart-edit-btn {
+[data-theme="dark"] .mobile-cart-menu .cart-edit-btn {
   background: rgba(66, 165, 245, 0.2);
   color: #64b5f6;
 }
 
-[data-theme="dark"] .cart-edit-btn:hover {
+[data-theme="dark"] .mobile-cart-menu .cart-edit-btn:hover {
   background: rgba(66, 165, 245, 0.3);
 }
