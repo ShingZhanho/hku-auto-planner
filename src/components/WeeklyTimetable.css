@@ -3,8 +3,8 @@
   flex-direction: column;
   height: 100%;
   background-color: white;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow-y: scroll;
+  overflow-x: scroll;
   position: relative;
   scroll-behavior: smooth;
 }
