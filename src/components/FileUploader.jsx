@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { excelToJSON, loadDefaultExcel } from '../utils/excelUtils';
 
 function FileUploader({ onDataLoaded }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  useEffect(() => {
+    // Fetch last updated time
+    fetch('./last-updated.json')
+      .then(response => response.json())
+      .then(data => setLastUpdated(data['last-updated-at']))
+      .catch(err => console.error('Failed to load last updated time:', err));
+  }, []);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -57,6 +66,12 @@ function FileUploader({ onDataLoaded }) {
         >
           {loading ? 'Loading...' : 'Use Built-in Timetable'}
         </button>
+        
+        {lastUpdated && (
+          <div className="last-updated-info">
+            Last updated: {lastUpdated}
+          </div>
+        )}
         
         <div className="divider">OR</div>
         

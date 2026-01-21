@@ -25,3 +25,6 @@ dist-ssr
 
 # pnpm
 pnpm-lock.yaml
+
+# last-updated file, generate dynamically
+public/last-updated.json
