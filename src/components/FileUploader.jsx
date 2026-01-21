@@ -11,7 +11,7 @@ function FileUploader({ onDataLoaded }) {
     // Fetch last updated time
     fetch('./last-updated.json')
       .then(response => response.json())
-      .then(data => setLastUpdated(data['last-updated-at']))
+      .then(data => setLastUpdated(data['last_updated_at']))
       .catch(err => console.error('Failed to load last updated time:', err));
   }, []);
 
