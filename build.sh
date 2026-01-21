@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # Run this script on GitHub Actions to deploy the site.
 
