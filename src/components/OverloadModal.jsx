@@ -5,8 +5,6 @@ function OverloadModal({ isOpen, onClose, overloadEnabled, setOverloadEnabled, m
   const [localEnabled, setLocalEnabled] = useState(false);
   const [localValue, setLocalValue] = useState('7');
   const [error, setError] = useState('');
-  const courseCount = selectedCourses.length;
-  const MAX_TOTAL_COURSES = 12;
 
   useEffect(() => {
     if (isOpen) {
@@ -29,11 +27,6 @@ function OverloadModal({ isOpen, onClose, overloadEnabled, setOverloadEnabled, m
       }
       setMaxPerSemester(parsed);
     } else {
-      // Check if user has more than 12 courses
-      if (courseCount > MAX_TOTAL_COURSES) {
-        setError(`Cannot disable overload: you have ${courseCount} courses selected. Please remove ${courseCount - MAX_TOTAL_COURSES} course(s) first.`);
-        return;
-      }
       // When overload is disabled, reset to default value
       setMaxPerSemester(6);
     }
@@ -54,13 +47,7 @@ function OverloadModal({ isOpen, onClose, overloadEnabled, setOverloadEnabled, m
                 const newValue = e.target.checked;
                 setLocalEnabled(newValue);
                 // Clear error when enabling, or show warning when disabling with too many courses
-                if (newValue) {
-                  setError('');
-                } else if (courseCount > MAX_TOTAL_COURSES) {
-                  setError(`Cannot disable overload: you have ${courseCount} courses selected. Please remove ${courseCount - MAX_TOTAL_COURSES} course(s) first.`);
-                } else {
-                  setError('');
-                }
+                setError('');
               }} 
             />
             <span className="overload-checkbox-label">Enable Overload</span>
