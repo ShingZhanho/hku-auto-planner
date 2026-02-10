@@ -114,7 +114,7 @@ function CalendarExportModal({ isOpen, onClose, schedule, availableSemesters, bl
       onClose();
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export calendar. Please check the console for details.');
+      alert(`Failed to export calendar: ${error.message || 'Unknown error'}. Please try again or adjust your export settings.`);
     }
   };
 

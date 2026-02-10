@@ -156,7 +156,39 @@ function MobileApp() {
 
   const handleGeneratePlans = () => {
     if (selectedCourses.length === 0) {
-      setErrorMessage('Please select at least one course');
+      setErrorMessage('Please select at least one course.');
+      return;
+    }
+
+    // Validate overload settings
+    if (overloadEnabled && !(maxPerSemester > 6 && maxPerSemester < 12)) {
+      setErrorMessage('When overload is enabled, "Max per semester" must be an integer between 7 and 11.');
+      return;
+    }
+
+    // Check per-semester feasibility
+    const numTerms = processedData?.availableTerms?.length || 2;
+    const perSemesterLimit = overloadEnabled ? maxPerSemester : 6;
+    const allowedTotalByPerSem = perSemesterLimit * numTerms;
+    if (selectedCourses.length > allowedTotalByPerSem) {
+      if (!overloadEnabled) {
+        setErrorMessage(
+          `Overload is disabled. You may select up to ${perSemesterLimit} courses per semester (${allowedTotalByPerSem} total). ` +
+          `Please remove some courses or enable Overload to increase the per-semester limit.`
+        );
+      } else {
+        setErrorMessage(
+          `Your selection of ${selectedCourses.length} courses exceeds the configured per-semester maximum of ${maxPerSemester} across ${numTerms} semesters (allowing ${allowedTotalByPerSem} courses total). ` +
+          `Please reduce selected courses or increase "Max per semester".`
+        );
+      }
+      return;
+    }
+
+    // Check if all courses have at least one section selected
+    const coursesWithoutSections = selectedCourses.filter(c => !c.selectedSections || c.selectedSections.length === 0);
+    if (coursesWithoutSections.length > 0) {
+      setErrorMessage(`Please select at least one subclass for: ${coursesWithoutSections.map(c => c.courseCode).join(', ')}.`);
       return;
     }
 
@@ -170,11 +202,14 @@ function MobileApp() {
           processedData.grouped, 
           processedData.availableTerms, 
           blockouts,
-              overloadEnabled ? maxPerSemester : 6 // No-op placeholder to ensure overwrite context remains consistent
+          overloadEnabled ? maxPerSemester : 6
         );
         
         if (schedules.plans.length === 0) {
-          setErrorMessage('No valid schedules found. Try removing some constraints or courses.');
+          setErrorMessage(
+            'No possible schedule found with the selected courses and subclasses. ' +
+            'Please try selecting more subclasses or changing your course selection.'
+          );
           setSolutions(null);
         } else {
           setSolutions(schedules);
@@ -182,7 +217,8 @@ function MobileApp() {
           setView('solutions');
         }
       } catch (error) {
-        setErrorMessage(error.message || 'An error occurred while generating schedules');
+        console.error('Error generating schedules:', error);
+        setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
         setSolutions(null);
       } finally {
         setIsLoading(false);

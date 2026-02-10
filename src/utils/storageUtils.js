@@ -93,6 +93,8 @@ export const saveShoppingCart = (dataHash, selectedCourses, blockouts) => {
     }
   } catch (error) {
     console.error('Error saving shopping cart:', error);
+    // Storage quota may be exceeded or localStorage disabled
+    console.warn('Your course selections may not persist between sessions. This can happen if your browser storage is full or disabled.');
   }
 };
 
@@ -143,6 +145,7 @@ export const loadShoppingCart = (currentDataHash) => {
     };
   } catch (error) {
     console.error('Error loading shopping cart:', error);
+    console.warn('Could not restore your previous course selections. The saved data may be corrupted and has been cleared.');
     clearShoppingCart();
     return null;
   }

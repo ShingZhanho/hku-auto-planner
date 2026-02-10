@@ -384,7 +384,11 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
     } else if (hasValidSem2Sections) {
       onlySem2.push(courseInfo);
     } else {
-      console.error(`No valid sections found for ${course.courseCode} in any semester`);
+      throw new Error(
+        `No valid subclass found for ${course.courseCode} in any semester. ` +
+        `The selected subclass(es) (${course.selectedSections.join(', ')}) do not match any available offerings. ` +
+        `Please re-select subclasses for this course.`
+      );
     }
   });
   
@@ -396,14 +400,18 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   
   // Step 2: Check if single-semester courses already exceed limit
   if (onlySem1.length > MAX_COURSES_PER_SEMESTER) {
-    console.error(`❌ IMPOSSIBLE: ${onlySem1.length} courses can only be scheduled in Sem 1, exceeds limit of ${MAX_COURSES_PER_SEMESTER}`);
-    console.error('   Courses:', onlySem1.map(c => c.code).join(', '));
-    return [];
+    throw new Error(
+      `Too many courses in ${term1}: ${onlySem1.length} courses (${onlySem1.map(c => c.code).join(', ')}) ` +
+      `can only be scheduled in ${term1}, but the limit is ${MAX_COURSES_PER_SEMESTER} per semester. ` +
+      `Please remove some ${term1}-only courses or increase the "Max per semester" in Overload settings.`
+    );
   }
   if (onlySem2.length > MAX_COURSES_PER_SEMESTER) {
-    console.error(`❌ IMPOSSIBLE: ${onlySem2.length} courses only offered in Sem 2, exceeds limit of ${MAX_COURSES_PER_SEMESTER}`);
-    console.error('   Courses:', onlySem2.map(c => c.code).join(', '));
-    return [];
+    throw new Error(
+      `Too many courses in ${term2}: ${onlySem2.length} courses (${onlySem2.map(c => c.code).join(', ')}) ` +
+      `can only be scheduled in ${term2}, but the limit is ${MAX_COURSES_PER_SEMESTER} per semester. ` +
+      `Please remove some ${term2}-only courses or increase the "Max per semester" in Overload settings.`
+    );
   }
   
   const sem1Slots = MAX_COURSES_PER_SEMESTER - onlySem1.length;
@@ -415,8 +423,13 @@ export const generateSchedules = (selectedCourses, groupedData, availableTerms =
   }
   
   if (bothSemesters.length > sem1Slots + sem2Slots) {
-    console.error(`❌ IMPOSSIBLE: ${bothSemesters.length} flexible courses need ${bothSemesters.length} slots, but only ${sem1Slots + sem2Slots} slots available`);
-    return [];
+    const totalSlots = sem1Slots + sem2Slots;
+    throw new Error(
+      `Not enough slots to fit all courses: ${bothSemesters.length} courses (${bothSemesters.map(c => c.code).join(', ')}) ` +
+      `need to be distributed across semesters, but only ${totalSlots} slot(s) remain ` +
+      `(${sem1Slots} in ${term1}, ${sem2Slots} in ${term2}) after filling semester-specific courses. ` +
+      `Please remove some courses or increase the "Max per semester" in Overload settings.`
+    );
   }
   
   // Step 3: Generate all valid distributions of bothSemesters courses

@@ -348,14 +348,8 @@ function App() {
           setErrorMessage('');
         }
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error('Error generating schedules:', error);
-        }
-        // More helpful guidance for users when generateSchedules throws.
-        setErrorMessage(
-          'An error occurred while generating schedules. This can happen when the selected courses exceed per-semester limits or due to an internal error. ' +
-          'Please check the Overload setting and "Max per semester", reduce the number of selected courses, or try enabling Overload.'
-        );
+        console.error('Error generating schedules:', error);
+        setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
         setTimeout(() => setErrorMessage(''), 8000);
         setSolutions(null);
         setSelectedPlanIndex(null);
