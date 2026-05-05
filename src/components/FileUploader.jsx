@@ -58,6 +58,12 @@ function FileUploader({ onDataLoaded }) {
     <div className="file-uploader">
       <h2>Load Class Timetable</h2>
       
+      <p>
+        This app needs an Excel class timetable file from HKU intranet to function.
+        You can either use the built-in timetable (which we try to keep updated) or download the latest timetable and upload it here.
+        Check out <a href="https://youtu.be/h2U6nSto7d4">the video</a> to see how to download.
+      </p>
+
       <div className="upload-section">
         <button 
           onClick={handleLoadDefault} 
