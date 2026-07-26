@@ -1,10 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../../utils/courseParser';
+import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../../utils/calendarUtils';
 import './MobileCalendar.css';
 
 function MobileCalendar({ schedule, blockouts, onExport }) {
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(false);
   const gridRef = useRef(null);
 
   // Filter schedule by selected semester and only include courses with valid sessions
@@ -45,6 +47,18 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
   }, [semesterSchedule]);
 
   const currentWeek = weeks[currentWeekIndex];
+
+  const skipsPartialFirstWeek = shouldSkipPartialFirstWeek({
+    selectedSemester,
+    firstSemester: availableSemesters[0],
+    semesterStart: dateRange.minDate,
+    weekCount: weeks.length
+  });
+
+  useEffect(() => {
+    if (!selectedSemester || weeks.length === 0) return;
+    setCurrentWeekIndex(skipsPartialFirstWeek ? 1 : 0);
+  }, [selectedSemester, weeks, skipsPartialFirstWeek]);
 
   // Get sessions for current week
   const weekSessions = useMemo(() => {
@@ -180,6 +194,7 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
               onClick={() => {
                 setSelectedSemester(semester);
                 setCurrentWeekIndex(0);
+                setIsPartialWeekNoticeDismissed(false);
               }}
             >
               {semester.replace(/^\d{4}-\d{2}\s*/, '')}
@@ -208,6 +223,25 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
             Next →
           </button>
         </div>
+
+        {skipsPartialFirstWeek && !isPartialWeekNoticeDismissed && (
+          <div className="mobile-partial-week-notice" role="status">
+            <div>
+              <strong>Showing Week 2</strong>
+              <span>
+                Semester starts {formatSemesterStart(dateRange.minDate)}. Week 1 is incomplete, so we opened
+                {' '}the first full teaching week. You can still go back.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPartialWeekNoticeDismissed(true)}
+              aria-label="Dismiss partial week message"
+            >
+              ×
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mobile-timetable-container" ref={gridRef}>

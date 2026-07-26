@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, memo } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
+import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../utils/calendarUtils';
 import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) {
@@ -19,6 +20,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
   
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState(firstAvailableSemester);
+  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(false);
   
   // Auto-switch to available semester if current selection has no courses
   useEffect(() => {
@@ -49,17 +51,29 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
     });
   }, [schedule, selectedSemester]);
 
-  const weeks = useMemo(() => {
+  const { weeks, dateRange } = useMemo(() => {
     const range = getScheduleDateRange(semesterSchedule);
     const weekList = getWeekNumbers(range.minDate, range.maxDate);
-    return weekList;
+    return { weeks: weekList, dateRange: range };
   }, [semesterSchedule]);
+
+  const skipsPartialFirstWeek = shouldSkipPartialFirstWeek({
+    selectedSemester,
+    firstSemester: availableSemesters[0],
+    semesterStart: dateRange.minDate,
+    weekCount: weeks.length
+  });
 
   const currentWeek = weeks[currentWeekIndex];
 
   // Auto-select first week with classes when semester changes
   useEffect(() => {
     if (!semesterSchedule || semesterSchedule.length === 0 || !weeks || weeks.length === 0) {
+      return;
+    }
+
+    if (skipsPartialFirstWeek) {
+      setCurrentWeekIndex(1);
       return;
     }
 
@@ -94,7 +108,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
         return;
       }
     }
-  }, [semesterSchedule, weeks, selectedSemester]);
+  }, [semesterSchedule, weeks, selectedSemester, skipsPartialFirstWeek]);
 
   // Get sessions for current week
   const weekSessions = useMemo(() => {
@@ -243,6 +257,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
                       if (!isDisabled) {
                         setSelectedSemester(semester);
                         setCurrentWeekIndex(0);
+                        setIsPartialWeekNoticeDismissed(false);
                       }
                     }}
                     disabled={isDisabled}
@@ -278,6 +293,25 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
             Next →
           </button>
         </div>
+
+        {skipsPartialFirstWeek && !isPartialWeekNoticeDismissed && (
+          <div className="partial-week-notice" role="status">
+            <div>
+              <strong>Showing Week 2</strong>
+              <span>
+                This semester starts on {formatSemesterStart(dateRange.minDate)}, so Week 1 is incomplete.
+                {' '}We opened the first complete teaching week; you can still go back to Week 1.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPartialWeekNoticeDismissed(true)}
+              aria-label="Dismiss partial week message"
+            >
+              ×
+            </button>
+          </div>
+        )}
         
         <div className="day-headers-grid">
           <div className="day-header-spacer"></div>
@@ -385,6 +419,10 @@ const arePropsEqual = (prevProps, nextProps) => {
   
   // Check if blockouts changed
   if (prevProps.blockouts.length !== nextProps.blockouts.length) {
+    return false;
+  }
+
+  if (prevProps.availableSemesters.join('|') !== nextProps.availableSemesters.join('|')) {
     return false;
   }
   

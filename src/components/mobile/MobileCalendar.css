@@ -79,6 +79,42 @@
   gap: 1rem;
 }
 
+.mobile-partial-week-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.mobile-partial-week-notice div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.mobile-partial-week-notice span {
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.mobile-partial-week-notice button {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+}
+
 .mobile-nav-button {
   background: #007bff;
   color: white;
@@ -309,6 +345,12 @@
 [data-theme="dark"] .mobile-nav-button:disabled {
   background: #2a2a2a;
   color: #666666;
+}
+
+[data-theme="dark"] .mobile-partial-week-notice {
+  border-color: #1e40af;
+  background: rgba(30, 64, 175, 0.2);
+  color: #bfdbfe;
 }
 
 [data-theme="dark"] .mobile-day-headers {

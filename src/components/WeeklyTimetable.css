@@ -71,6 +71,43 @@
   margin-bottom: 1rem;
 }
 
+.partial-week-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.partial-week-notice div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.partial-week-notice span {
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.partial-week-notice button {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
 .day-headers-grid {
   display: flex;
   gap: 0;
@@ -312,6 +349,12 @@
 
 [data-theme="dark"] .date-range {
   color: var(--text-secondary);
+}
+
+[data-theme="dark"] .partial-week-notice {
+  border-color: #1e40af;
+  background: rgba(30, 64, 175, 0.2);
+  color: #bfdbfe;
 }
 
 [data-theme="dark"] .nav-button {
