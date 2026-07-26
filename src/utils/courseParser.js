@@ -242,7 +242,8 @@ export const getUniqueCourses = (groupedData) => {
         terms: [],
         sections: Object.keys(course.sections),
         sectionCount: Object.keys(course.sections).length,
-        classTime: classTime
+        classTime: classTime,
+        instructors: []
       };
     }
     
@@ -259,6 +260,20 @@ export const getUniqueCourses = (groupedData) => {
       }
     });
     courseMap[course.courseCode].sectionCount = courseMap[course.courseCode].sections.length;
+
+    Object.values(course.sections).forEach(sessions => {
+      sessions.forEach(session => {
+        String(session.instructor || '')
+          .split(';')
+          .map(instructor => instructor.trim())
+          .filter(Boolean)
+          .forEach(instructor => {
+            if (!courseMap[course.courseCode].instructors.includes(instructor)) {
+              courseMap[course.courseCode].instructors.push(instructor);
+            }
+          });
+      });
+    });
   });
   
   return Object.values(courseMap);

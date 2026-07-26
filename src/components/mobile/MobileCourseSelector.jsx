@@ -6,14 +6,27 @@ import { formatSubclass } from '../../utils/campusUtils';
 function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, searchTerm, onSearchChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
   const [showOverloadModal, setShowOverloadModal] = useState(false);
+  const [semesterFilter, setSemesterFilter] = useState('all');
 
   const filteredCourses = useMemo(() => {
-    if (!searchTerm.trim()) return [];
-    const search = searchTerm.toLowerCase();
-    return coursesData.courses.filter(course => 
-      course?.courseCode?.toLowerCase().includes(search)
-    );
-  }, [coursesData.courses, searchTerm]);
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+
+    return coursesData.courses.filter(course => {
+      const matchesSemester = semesterFilter === 'all' || course.terms.includes(semesterFilter);
+      const matchesText = course?.courseCode?.toLowerCase().includes(query)
+        || String(course.courseTitle || '').toLowerCase().includes(query)
+        || (course.instructors || []).some(instructor => instructor.toLowerCase().includes(query));
+      return matchesSemester && matchesText;
+    });
+  }, [coursesData.courses, searchTerm, semesterFilter]);
+
+  const getMatchingInstructors = (course) => {
+    const query = searchTerm.trim().toLowerCase();
+    return query
+      ? (course.instructors || []).filter(instructor => instructor.toLowerCase().includes(query))
+      : [];
+  };
 
   // Auto-expand when only one course matches
   useMemo(() => {
@@ -105,11 +118,30 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
       <div className="mobile-search-box">
         <input
           type="text"
-          placeholder="Search by course code..."
+          placeholder="Course code, name, or instructor..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           className="mobile-search-input"
         />
+        <div className="mobile-semester-search-filter" role="group" aria-label="Filter courses by semester">
+          <button
+            type="button"
+            className={semesterFilter === 'all' ? 'active' : ''}
+            onClick={() => setSemesterFilter('all')}
+          >
+            All
+          </button>
+          {coursesData.availableTerms.map(term => (
+            <button
+              type="button"
+              key={term}
+              className={semesterFilter === term ? 'active' : ''}
+              onClick={() => setSemesterFilter(term)}
+            >
+              {term.replace(/^\d{4}-\d{2}\s*/, '')}
+            </button>
+          ))}
+        </div>
         <div className="mobile-overload-container">
           <button
             className="mobile-overload-btn"
@@ -123,7 +155,7 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
       <div className="mobile-courses-list">
         {filteredCourses.length === 0 ? (
           <div className="mobile-empty-state">
-            <p>{!searchTerm.trim() ? 'Enter a course code to search' : 'No courses found'}</p>
+            <p>{!searchTerm.trim() ? 'Search by course code, name, or instructor' : 'No courses found'}</p>
           </div>
         ) : (
           filteredCourses.map((course) => {
@@ -140,6 +172,11 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
                   <div className="mobile-course-info">
                     <h3 className="mobile-course-code">{course.courseCode}</h3>
                     <p className="mobile-course-title">{course.courseTitle}</p>
+                    {getMatchingInstructors(course).length > 0 && (
+                      <p className="mobile-search-match-context">
+                        Instructor: {getMatchingInstructors(course).join(', ')}
+                      </p>
+                    )}
                     <p className="mobile-course-meta">
                       {course.sectionCount} subclass(es) · {course.terms.join(', ')}
                       {selectedCount > 0 && (

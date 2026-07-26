@@ -5,15 +5,27 @@ import { formatSubclass } from '../utils/campusUtils';
 
 function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {}, isOverloadModalOpen = false, setIsOverloadModalOpen = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
+  const [semesterFilter, setSemesterFilter] = useState('all');
 
   // Memoize filtered courses to avoid recalculating on every render
   const filteredCourses = useMemo(() => {
-    if (!searchTerm.trim()) return [];
-    const searchLower = searchTerm.toLowerCase();
-    return coursesData.courses.filter(course => 
-      course.courseCode.toLowerCase().includes(searchLower)
-    );
-  }, [searchTerm, coursesData.courses]);
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+
+    return coursesData.courses.filter(course => {
+      const matchesSemester = semesterFilter === 'all' || course.terms.includes(semesterFilter);
+      const matchesText = course.courseCode.toLowerCase().includes(query)
+        || String(course.courseTitle || '').toLowerCase().includes(query)
+        || (course.instructors || []).some(instructor => instructor.toLowerCase().includes(query));
+      return matchesSemester && matchesText;
+    });
+  }, [searchTerm, semesterFilter, coursesData.courses]);
+
+  const getMatchingInstructors = (course) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+    return (course.instructors || []).filter(instructor => instructor.toLowerCase().includes(query));
+  };
 
   // Auto-expand when only one course matches
   useEffect(() => {
@@ -153,11 +165,30 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
           </p>
           <input
             type="text"
-            placeholder="Search by course code (e.g., COMP1234, ECON)..."
+            placeholder="Search by course code, name, or instructor..."
             value={searchTerm}
             onChange={(e) => onSearchTermChange(e.target.value)}
             className="search-input"
           />
+          <div className="semester-search-filter" role="group" aria-label="Filter courses by semester">
+            <button
+              type="button"
+              className={semesterFilter === 'all' ? 'active' : ''}
+              onClick={() => setSemesterFilter('all')}
+            >
+              All semesters
+            </button>
+            {coursesData.availableTerms.map(term => (
+              <button
+                type="button"
+                key={term}
+                className={semesterFilter === term ? 'active' : ''}
+                onClick={() => setSemesterFilter(term)}
+              >
+                {term.replace(/^\d{4}-\d{2}\s*/, '')}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="courses-list">
@@ -182,6 +213,11 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                     )}
                   </div>
                   <span className="course-title">{course.courseTitle}</span>
+                  {getMatchingInstructors(course).length > 0 && (
+                    <span className="search-match-context">
+                      Instructor: {getMatchingInstructors(course).join(', ')}
+                    </span>
+                  )}
                 </div>
                 <div className="course-meta">
                   <span className="course-dept">{course.offerDept}</span>
@@ -267,8 +303,8 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
         {filteredCourses.length === 0 && (
           <div className="no-results">
             {!searchTerm.trim() 
-              ? 'Enter a course code to search'
-              : `No courses found matching "${searchTerm}"`
+              ? 'Enter a course code, name, or instructor to search'
+              : `No courses found matching "${searchTerm}"${semesterFilter === 'all' ? '' : ' in this semester'}`
             }
           </div>
         )}

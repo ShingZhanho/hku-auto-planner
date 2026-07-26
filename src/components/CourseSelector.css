@@ -82,6 +82,46 @@
   border-color: #4CAF50;
 }
 
+.semester-search-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.semester-search-filter button {
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border-light, #ddd);
+  border-radius: 999px;
+  background: var(--bg-primary, #fff);
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.semester-search-filter button.active {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.search-match-context {
+  margin-top: 0.25rem;
+  color: #2563eb;
+  font-size: 0.78rem;
+}
+
+[data-theme="dark"] .semester-search-filter button.active {
+  border-color: #60a5fa;
+  background: rgba(37, 99, 235, 0.24);
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .search-match-context {
+  color: #93c5fd;
+}
+
 .courses-list {
   padding: 1rem;
 }
