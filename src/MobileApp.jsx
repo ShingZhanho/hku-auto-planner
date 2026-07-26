@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import './MobileApp.css'
 import FileUploader from './components/FileUploader'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -11,15 +11,17 @@ import CalendarExportModal from './components/CalendarExportModal'
 import IncompatibilityDialog from './components/IncompatibilityDialog'
 import OverloadModal from './components/OverloadModal'
 import ShanghaiCampusWarning from './components/ShanghaiCampusWarning'
+import DataUpdateNotice from './components/DataUpdateNotice'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
 import { analyzeIncompatibilities } from './utils/conflictAnalyzer'
 import { isShanghaiSubclass } from './utils/campusUtils'
 import {
-  hashCourseData,
+  createCourseHashGetter,
   saveShoppingCart,
   loadShoppingCart,
   loadShanghaiWarningAcknowledgement,
-  saveShanghaiWarningAcknowledgement
+  saveShanghaiWarningAcknowledgement,
+  clearShanghaiWarningAcknowledgement
 } from './utils/storageUtils'
 
 function MobileApp() {
@@ -36,7 +38,8 @@ function MobileApp() {
   const [hasAcknowledgedShanghaiWarning, setHasAcknowledgedShanghaiWarning] = useState(false);
   const [blockouts, setBlockouts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dataHash, setDataHash] = useState(null);
+  const [removedUpdatedCourses, setRemovedUpdatedCourses] = useState([]);
+  const courseHashGetterRef = useRef(null);
   
   // Initialize overload settings from localStorage synchronously
   const [overloadEnabled, setOverloadEnabled] = useState(() => {
@@ -86,10 +89,10 @@ function MobileApp() {
   }, [selectedPlanIndex, solutions]);
 
   useEffect(() => {
-    if (dataHash && processedData) {
-      saveShoppingCart(dataHash, selectedCourses, blockouts);
+    if (courseHashGetterRef.current && processedData) {
+      saveShoppingCart(selectedCourses, blockouts, courseHashGetterRef.current);
     }
-  }, [selectedCourses, blockouts, dataHash, processedData]);
+  }, [selectedCourses, blockouts, processedData]);
 
   // Persist overload preference to localStorage
   useEffect(() => {
@@ -126,18 +129,23 @@ function MobileApp() {
 
   const handleDataLoaded = (data) => {
     setCourseData(data);
-    const hash = hashCourseData(data.json);
-    setDataHash(hash);
-    
     const processed = processCoursesData(data.json);
     setProcessedData(processed);
+    const getCourseHash = createCourseHashGetter(processed.grouped);
+    courseHashGetterRef.current = getCourseHash;
     
-    const savedCart = loadShoppingCart(hash);
+    const savedCart = loadShoppingCart(getCourseHash);
     if (savedCart) {
       setSelectedCourses(savedCart.selectedCourses);
       setBlockouts(savedCart.blockouts);
+      setRemovedUpdatedCourses(savedCart.removedCourses);
     }
-    setHasAcknowledgedShanghaiWarning(loadShanghaiWarningAcknowledgement(hash));
+    if (savedCart?.databaseChanged) {
+      clearShanghaiWarningAcknowledgement();
+      setHasAcknowledgedShanghaiWarning(false);
+    } else {
+      setHasAcknowledgedShanghaiWarning(loadShanghaiWarningAcknowledgement());
+    }
     setShanghaiWarning(null);
     
     setView('select');
@@ -155,7 +163,7 @@ function MobileApp() {
         sections: newlySelectedShanghaiSections
       });
       setHasAcknowledgedShanghaiWarning(true);
-      saveShanghaiWarningAcknowledgement(dataHash);
+      saveShanghaiWarningAcknowledgement();
     }
 
     setSelectedCourses(prev => {
@@ -486,6 +494,12 @@ function MobileApp() {
         warning={shanghaiWarning}
         variant="mobile"
         onClose={() => setShanghaiWarning(null)}
+      />
+
+      <DataUpdateNotice
+        removedCourses={removedUpdatedCourses}
+        variant="mobile"
+        onClose={() => setRemovedUpdatedCourses([])}
       />
     </div>
   );

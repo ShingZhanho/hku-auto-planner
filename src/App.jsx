@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import './App.css'
 import FileUploader from './components/FileUploader'
 import CourseSelector from './components/CourseSelector'
@@ -10,15 +10,17 @@ import CalendarExportModal from './components/CalendarExportModal'
 import ThemeToggle from './components/ThemeToggle'
 import IncompatibilityDialog from './components/IncompatibilityDialog'
 import ShanghaiCampusWarning from './components/ShanghaiCampusWarning'
+import DataUpdateNotice from './components/DataUpdateNotice'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
 import { analyzeIncompatibilities } from './utils/conflictAnalyzer'
 import { isShanghaiSubclass } from './utils/campusUtils'
 import {
-  hashCourseData,
+  createCourseHashGetter,
   saveShoppingCart,
   loadShoppingCart,
   loadShanghaiWarningAcknowledgement,
-  saveShanghaiWarningAcknowledgement
+  saveShanghaiWarningAcknowledgement,
+  clearShanghaiWarningAcknowledgement
 } from './utils/storageUtils'
 
 function App() {
@@ -39,7 +41,8 @@ function App() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isOverloadModalOpen, setIsOverloadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dataHash, setDataHash] = useState(null);
+  const [removedUpdatedCourses, setRemovedUpdatedCourses] = useState([]);
+  const courseHashGetterRef = useRef(null);
   
   // Initialize overload settings from localStorage synchronously
   const [overloadEnabled, setOverloadEnabled] = useState(() => {
@@ -112,10 +115,10 @@ function App() {
 
   // Save shopping cart to cookies whenever it changes
   useEffect(() => {
-    if (dataHash && processedData) {
-      saveShoppingCart(dataHash, selectedCourses, blockouts);
+    if (courseHashGetterRef.current && processedData) {
+      saveShoppingCart(selectedCourses, blockouts, courseHashGetterRef.current);
     }
-  }, [selectedCourses, blockouts, dataHash, processedData]);
+  }, [selectedCourses, blockouts, processedData]);
 
   const handleDataLoaded = (data) => {
     setCourseData(data);
@@ -124,23 +127,18 @@ function App() {
       console.log('Raw data loaded:', data.json.length, 'rows');
     }
     
-    // Calculate hash of the data
-    const hash = hashCourseData(data.json);
-    setDataHash(hash);
-    
-    if (import.meta.env.DEV) {
-      console.log('Data hash:', hash);
-    }
-    
     // Process the data
     const processed = processCoursesData(data.json);
     setProcessedData(processed);
+    const getCourseHash = createCourseHashGetter(processed.grouped);
+    courseHashGetterRef.current = getCourseHash;
     
     // Try to restore shopping cart from cookies
-    const savedCart = loadShoppingCart(hash);
+    const savedCart = loadShoppingCart(getCourseHash);
     if (savedCart) {
       setSelectedCourses(savedCart.selectedCourses);
       setBlockouts(savedCart.blockouts);
+      setRemovedUpdatedCourses(savedCart.removedCourses);
       
       if (import.meta.env.DEV) {
         console.log('Restored shopping cart:', {
@@ -149,7 +147,12 @@ function App() {
         });
       }
     }
-    setHasAcknowledgedShanghaiWarning(loadShanghaiWarningAcknowledgement(hash));
+    if (savedCart?.databaseChanged) {
+      clearShanghaiWarningAcknowledgement();
+      setHasAcknowledgedShanghaiWarning(false);
+    } else {
+      setHasAcknowledgedShanghaiWarning(loadShanghaiWarningAcknowledgement());
+    }
     setShanghaiWarning(null);
     
     if (import.meta.env.DEV) {
@@ -173,7 +176,7 @@ function App() {
         sections: newlySelectedShanghaiSections
       });
       setHasAcknowledgedShanghaiWarning(true);
-      saveShanghaiWarningAcknowledgement(dataHash);
+      saveShanghaiWarningAcknowledgement();
     }
 
     setSelectedCourses(prev => {
@@ -587,6 +590,12 @@ function App() {
         warning={shanghaiWarning}
         variant="desktop"
         onClose={() => setShanghaiWarning(null)}
+      />
+
+      <DataUpdateNotice
+        removedCourses={removedUpdatedCourses}
+        variant="desktop"
+        onClose={() => setRemovedUpdatedCourses([])}
       />
     </div>
   )
