@@ -8,7 +8,9 @@ import WeeklyTimetable from './components/WeeklyTimetable'
 import BlockoutModal from './components/BlockoutModal'
 import CalendarExportModal from './components/CalendarExportModal'
 import ThemeToggle from './components/ThemeToggle'
+import IncompatibilityDialog from './components/IncompatibilityDialog'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
+import { analyzeIncompatibilities } from './utils/conflictAnalyzer'
 import { hashCourseData, saveShoppingCart, loadShoppingCart } from './utils/storageUtils'
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
   const [solutions, setSolutions] = useState(null);
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [conflictReport, setConflictReport] = useState(null);
   const [blockouts, setBlockouts] = useState([]);
   const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
   const [editingBlockout, setEditingBlockout] = useState(null);
@@ -154,11 +157,13 @@ function App() {
       return [...filtered, { ...course, selectedSections }];
     });
     setErrorMessage(''); // Clear error when user makes changes
+    setConflictReport(null);
   };
 
   const handleCourseRemove = (courseCode) => {
     setSelectedCourses(prev => prev.filter(c => c.courseCode !== courseCode));
     setErrorMessage(''); // Clear error when user makes changes
+    setConflictReport(null);
   };
 
   const handleAddBlockout = (blockout, isEdit = false) => {
@@ -170,6 +175,7 @@ function App() {
       setBlockouts(prev => [...prev, blockout]);
     }
     setErrorMessage('');
+    setConflictReport(null);
     setEditingBlockout(null); // Clear editing state
   };
 
@@ -186,22 +192,41 @@ function App() {
   const handleRemoveBlockout = (blockoutId) => {
     setBlockouts(prev => prev.filter(b => b.id !== blockoutId));
     setErrorMessage('');
+    setConflictReport(null);
   };
 
   const handleClearAllCourses = () => {
     setSelectedCourses([]);
     setErrorMessage('');
+    setConflictReport(null);
   };
 
   const handleClearAllBlockouts = () => {
     setBlockouts([]);
     setErrorMessage('');
+    setConflictReport(null);
   };
 
   const handleClearAll = () => {
     setSelectedCourses([]);
     setBlockouts([]);
     setErrorMessage('');
+    setConflictReport(null);
+  };
+
+  const showIncompatibilityReport = () => {
+    const report = analyzeIncompatibilities({
+      selectedCourses,
+      groupedData: processedData.grouped,
+      availableTerms: processedData.availableTerms,
+      blockouts,
+      maxPerSemester: overloadEnabled ? maxPerSemester : 6
+    });
+
+    if (report.issues.length === 0) return false;
+    setConflictReport(report);
+    setErrorMessage('');
+    return true;
   };
 
   const handleSolve = () => {
@@ -214,8 +239,10 @@ function App() {
     }
 
     if (!overloadEnabled && selectedCourses.length > MAX_COURSES) {
-      setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
-      setTimeout(() => setErrorMessage(''), 5000);
+      if (!showIncompatibilityReport()) {
+        setErrorMessage(`Please select at most ${MAX_COURSES} courses.`);
+        setTimeout(() => setErrorMessage(''), 5000);
+      }
       return;
     }
 
@@ -227,18 +254,13 @@ function App() {
     const perSemesterLimit = overloadEnabled ? maxPerSemester : 6;
     const allowedTotalByPerSem = perSemesterLimit * numTerms;
     if (selectedCourses.length > allowedTotalByPerSem) {
-      if (!overloadEnabled) {
+      if (!showIncompatibilityReport()) {
         setErrorMessage(
-          `Overload is disabled. You may select up to ${perSemesterLimit} courses per semester (${allowedTotalByPerSem} total). ` +
-          `Please remove some courses or enable Overload to increase the per-semester limit.`
+          `Your selection exceeds the configured limit of ${perSemesterLimit} course(s) per semester ` +
+          `(${allowedTotalByPerSem} across ${numTerms} semesters).`
         );
-      } else {
-        setErrorMessage(
-          `Your selection of ${selectedCourses.length} courses exceeds the configured per-semester maximum of ${maxPerSemester} across ${numTerms} semesters (allowing ${allowedTotalByPerSem} courses total). ` +
-          `Please reduce selected courses or increase "Max per semester".`
-        );
+        setTimeout(() => setErrorMessage(''), 7000);
       }
-      setTimeout(() => setErrorMessage(''), 7000);
       return;
     }
 
@@ -258,6 +280,7 @@ function App() {
 
     setIsLoading(true);
     setErrorMessage('');
+    setConflictReport(null);
 
     // Use setTimeout to allow UI to update with loading spinner
     setTimeout(() => {
@@ -276,11 +299,10 @@ function App() {
         console.log(`Blockouts:`, blockouts);
         
         if (result.schedules.length === 0) {
-          setErrorMessage(
-            'No possible schedule found with the selected courses and subclasses. ' +
-            'Please try selecting more subclasses or changing your course selection.'
-          );
-          setTimeout(() => setErrorMessage(''), 5000);
+          if (!showIncompatibilityReport()) {
+            setErrorMessage('No possible schedule was found, but no specific incompatibility could be isolated.');
+            setTimeout(() => setErrorMessage(''), 5000);
+          }
           setSolutions(null);
           setSelectedPlanIndex(null);
         } else {
@@ -349,8 +371,10 @@ function App() {
         }
       } catch (error) {
         console.error('Error generating schedules:', error);
-        setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
-        setTimeout(() => setErrorMessage(''), 8000);
+        if (!showIncompatibilityReport()) {
+          setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
+          setTimeout(() => setErrorMessage(''), 8000);
+        }
         setSolutions(null);
         setSelectedPlanIndex(null);
       } finally {
@@ -512,6 +536,25 @@ function App() {
         schedule={selectedPlanIndex !== null && solutions ? solutions.plans[selectedPlanIndex].courses : []}
         availableSemesters={solutions?.availableTerms || []}
         blockouts={blockouts}
+      />
+
+      <IncompatibilityDialog
+        report={conflictReport}
+        variant="desktop"
+        onClose={() => setConflictReport(null)}
+        onEditCourse={(courseCode) => {
+          setConflictReport(null);
+          setSearchTerm(courseCode);
+        }}
+        onEditBlockout={(blockoutKey) => {
+          const blockout = blockouts.find((item, index) => (item.id ?? index) === blockoutKey);
+          setConflictReport(null);
+          if (blockout) handleEditBlockout(blockout);
+        }}
+        onOpenOverload={() => {
+          setConflictReport(null);
+          setIsOverloadModalOpen(true);
+        }}
       />
     </div>
   )

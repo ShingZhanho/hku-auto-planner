@@ -68,7 +68,7 @@ So that you don't have to bang your head against the computer trying to figure o
 
     The system will calculate all possible combinations of timetables based on your selections.
     Plans that conflict with your blockout times will be automatically excluded.
-    If it is not possible to fit your selected courses without clashes, a red error message will appear. You can try selecting more subclasses or removing some courses.
+    If it is not possible to fit your selections, an incompatibility report will identify the smallest conflicting course/blockout groups it can find. The report explains subclass clashes, blockout clashes, and semester-capacity problems, and suggests actions for resolving each issue.
 
 5. On the next screen, you will see a list of possible plans on the left side.
 

@@ -8,7 +8,10 @@ import MobileCalendar from './components/mobile/MobileCalendar'
 import MobileNavMenu from './components/mobile/MobileNavMenu'
 import MobileCartMenu from './components/mobile/MobileCartMenu'
 import CalendarExportModal from './components/CalendarExportModal'
+import IncompatibilityDialog from './components/IncompatibilityDialog'
+import OverloadModal from './components/OverloadModal'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
+import { analyzeIncompatibilities } from './utils/conflictAnalyzer'
 import { hashCourseData, saveShoppingCart, loadShoppingCart } from './utils/storageUtils'
 
 function MobileApp() {
@@ -20,6 +23,7 @@ function MobileApp() {
   const [solutions, setSolutions] = useState(null);
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [conflictReport, setConflictReport] = useState(null);
   const [blockouts, setBlockouts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dataHash, setDataHash] = useState(null);
@@ -55,6 +59,7 @@ function MobileApp() {
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isCartMenuOpen, setIsCartMenuOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isConflictOverloadModalOpen, setIsConflictOverloadModalOpen] = useState(false);
 
   // Auto-dismiss error messages after 5 seconds
   useEffect(() => {
@@ -135,23 +140,50 @@ function MobileApp() {
       }
       return filtered;
     });
+    setConflictReport(null);
+    setErrorMessage('');
   };
 
   const handleCourseRemove = (courseCode) => {
     setSelectedCourses(prev => prev.filter(c => c.courseCode !== courseCode));
+    setConflictReport(null);
+    setErrorMessage('');
   };
 
   const handleAddBlockout = (blockout) => {
     setBlockouts(prev => [...prev, blockout]);
+    setConflictReport(null);
+    setErrorMessage('');
   };
 
-  const handleRemoveBlockout = (index) => {
-    setBlockouts(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveBlockout = (blockoutKey) => {
+    setBlockouts(prev => prev.filter((blockout, index) => (
+      typeof blockoutKey === 'number'
+        ? index !== blockoutKey
+        : blockout.id !== blockoutKey
+    )));
+    setConflictReport(null);
+    setErrorMessage('');
   };
 
   const handleCourseEdit = (courseCode) => {
     setSearchTerm(courseCode);
     setIsCartMenuOpen(false);
+  };
+
+  const showIncompatibilityReport = () => {
+    const report = analyzeIncompatibilities({
+      selectedCourses,
+      groupedData: processedData.grouped,
+      availableTerms: processedData.availableTerms,
+      blockouts,
+      maxPerSemester: overloadEnabled ? maxPerSemester : 6
+    });
+
+    if (report.issues.length === 0) return false;
+    setConflictReport(report);
+    setErrorMessage('');
+    return true;
   };
 
   const handleGeneratePlans = () => {
@@ -171,15 +203,10 @@ function MobileApp() {
     const perSemesterLimit = overloadEnabled ? maxPerSemester : 6;
     const allowedTotalByPerSem = perSemesterLimit * numTerms;
     if (selectedCourses.length > allowedTotalByPerSem) {
-      if (!overloadEnabled) {
+      if (!showIncompatibilityReport()) {
         setErrorMessage(
-          `Overload is disabled. You may select up to ${perSemesterLimit} courses per semester (${allowedTotalByPerSem} total). ` +
-          `Please remove some courses or enable Overload to increase the per-semester limit.`
-        );
-      } else {
-        setErrorMessage(
-          `Your selection of ${selectedCourses.length} courses exceeds the configured per-semester maximum of ${maxPerSemester} across ${numTerms} semesters (allowing ${allowedTotalByPerSem} courses total). ` +
-          `Please reduce selected courses or increase "Max per semester".`
+          `Your selection exceeds the configured limit of ${perSemesterLimit} course(s) per semester ` +
+          `(${allowedTotalByPerSem} across ${numTerms} semesters).`
         );
       }
       return;
@@ -194,6 +221,7 @@ function MobileApp() {
 
     setIsLoading(true);
     setErrorMessage('');
+    setConflictReport(null);
     
     setTimeout(() => {
       try {
@@ -206,10 +234,9 @@ function MobileApp() {
         );
         
         if (schedules.plans.length === 0) {
-          setErrorMessage(
-            'No possible schedule found with the selected courses and subclasses. ' +
-            'Please try selecting more subclasses or changing your course selection.'
-          );
+          if (!showIncompatibilityReport()) {
+            setErrorMessage('No possible schedule was found, but no specific incompatibility could be isolated.');
+          }
           setSolutions(null);
         } else {
           setSolutions(schedules);
@@ -218,7 +245,9 @@ function MobileApp() {
         }
       } catch (error) {
         console.error('Error generating schedules:', error);
-        setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
+        if (!showIncompatibilityReport()) {
+          setErrorMessage(error.message || 'An unexpected error occurred while generating schedules. Please try adjusting your course selection or settings.');
+        }
         setSolutions(null);
       } finally {
         setIsLoading(false);
@@ -396,6 +425,35 @@ function MobileApp() {
         schedule={selectedPlanIndex !== null && solutions ? solutions.plans[selectedPlanIndex].courses : []}
         availableSemesters={solutions?.availableTerms || []}
         blockouts={blockouts}
+      />
+
+      <OverloadModal
+        isOpen={isConflictOverloadModalOpen}
+        onClose={() => setIsConflictOverloadModalOpen(false)}
+        overloadEnabled={overloadEnabled}
+        setOverloadEnabled={setOverloadEnabled}
+        maxPerSemester={maxPerSemester}
+        setMaxPerSemester={setMaxPerSemester}
+        selectedCourses={selectedCourses}
+      />
+
+      <IncompatibilityDialog
+        report={conflictReport}
+        variant="mobile"
+        onClose={() => setConflictReport(null)}
+        onEditCourse={(courseCode) => {
+          setConflictReport(null);
+          setView('select');
+          setSearchTerm(courseCode);
+        }}
+        onEditBlockout={() => {
+          setConflictReport(null);
+          setIsCartMenuOpen(true);
+        }}
+        onOpenOverload={() => {
+          setConflictReport(null);
+          setIsConflictOverloadModalOpen(true);
+        }}
       />
     </div>
   );
