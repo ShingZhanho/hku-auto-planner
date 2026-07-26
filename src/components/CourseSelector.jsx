@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import './CourseSelector.css';
 import OverloadModal from './OverloadModal';
+import { formatSubclass } from '../utils/campusUtils';
 
 function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourseRemove, blockouts = [], onRemoveBlockout, onEditBlockout, onClearAll, onClearAllCourses, onClearAllBlockouts, searchTerm = '', onSearchTermChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {}, isOverloadModalOpen = false, setIsOverloadModalOpen = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
@@ -244,7 +245,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                                   onClick={() => handleSectionSelection(course, section, 'specific')}
                                 >
                                   <div className="section-btn-content">
-                                    <span className="section-name">Subclass {section}</span>
+                                    <span className="section-name">Subclass {formatSubclass(course.courseCode, section)}</span>
                                     {instructors.length > 0 && (
                                       <span className="section-instructor">{instructors.join(', ')}</span>
                                     )}
@@ -478,7 +479,7 @@ function CourseSelector({ coursesData, selectedCourses, onCourseSelect, onCourse
                                 htmlFor={`${course.courseCode}-${section}`}
                                 className="cart-section-label"
                               >
-                                <span className="cart-section-name">Subclass {section}</span>
+                                <span className="cart-section-name">Subclass {formatSubclass(course.courseCode, section)}</span>
                                 {instructors.length > 0 && (
                                   <span className="cart-section-instructor">{instructors.join(', ')}</span>
                                 )}

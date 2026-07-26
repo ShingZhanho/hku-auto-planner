@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, memo } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../utils/calendarUtils';
+import { formatSubclass } from '../utils/campusUtils';
 import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) {
@@ -394,7 +395,7 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
                         }}
                       >
                         <div className="session-code">{session.courseCode}</div>
-                        <div className="session-section">{session.section} · {session.venue}</div>
+                        <div className="session-section">{formatSubclass(session.courseCode, session.section)} · {session.venue}</div>
                         <div className="session-time">
                           {formatTime(session.startTime)} - {formatTime(session.endTime)}
                         </div>

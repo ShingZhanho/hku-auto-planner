@@ -1,4 +1,5 @@
 import './MobileSolutionsList.css';
+import { formatSubclass } from '../../utils/campusUtils';
 
 function MobileSolutionsList({ plans, selectedIndex, onPlanSelect }) {
   // Calculate day-offs for a semester
@@ -87,7 +88,7 @@ function MobileSolutionsList({ plans, selectedIndex, onPlanSelect }) {
                       {sem1Courses.map((course, idx) => (
                         <div key={idx} className="mobile-course-tag">
                           <strong>{course.courseCode}{!hasValidSessions(course) ? '*' : ''}</strong>
-                          <span>{course.section}</span>
+                          <span>{formatSubclass(course.courseCode, course.section)}</span>
                         </div>
                       ))}
                     </div>
@@ -101,7 +102,7 @@ function MobileSolutionsList({ plans, selectedIndex, onPlanSelect }) {
                       {sem2Courses.map((course, idx) => (
                         <div key={idx} className="mobile-course-tag">
                           <strong>{course.courseCode}{!hasValidSessions(course) ? '*' : ''}</strong>
-                          <span>{course.section}</span>
+                          <span>{formatSubclass(course.courseCode, course.section)}</span>
                         </div>
                       ))}
                     </div>

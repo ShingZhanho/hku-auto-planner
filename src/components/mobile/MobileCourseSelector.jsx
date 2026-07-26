@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import OverloadModal from '../OverloadModal';
 import './MobileCourseSelector.css';
+import { formatSubclass } from '../../utils/campusUtils';
 
 function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, searchTerm, onSearchChange, overloadEnabled = false, maxPerSemester = 6, setMaxPerSemester = () => {}, setOverloadEnabled = () => {} }) {
   const [expandedCourse, setExpandedCourse] = useState(null);
@@ -214,7 +215,7 @@ function MobileCourseSelector({ coursesData, selectedCourses, onCourseSelect, se
                                     />
                                   </div>
                                   <div className="mobile-section-info">
-                                    <h4 className="mobile-section-name">Subclass {section}</h4>
+                                    <h4 className="mobile-section-name">Subclass {formatSubclass(course.courseCode, section)}</h4>
                                     {instructors.length > 0 && (
                                       <p className="mobile-section-instructor">
                                         {instructors.join(', ')}

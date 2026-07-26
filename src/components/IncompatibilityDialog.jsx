@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import './IncompatibilityDialog.css';
+import { formatSubclass } from '../utils/campusUtils';
 
 const DAY_LABELS = {
   mon: 'Monday',
@@ -105,7 +106,7 @@ function IncompatibilityDialog({
                     <span>{course.courseTitle}</span>
                     <small>
                       Selected: {course.selectedSections.length > 0
-                        ? course.selectedSections.join(', ')
+                        ? course.selectedSections.map(section => formatSubclass(course.courseCode, section)).join(', ')
                         : 'No valid subclasses'}
                     </small>
                   </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../../utils/courseParser';
 import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../../utils/calendarUtils';
+import { formatSubclass } from '../../utils/campusUtils';
 import './MobileCalendar.css';
 
 function MobileCalendar({ schedule, blockouts, onExport }) {
@@ -325,7 +326,7 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
                           }}
                         >
                           <div className="mobile-session-code">{session.courseCode}</div>
-                          <div className="mobile-session-section">{session.section} · {session.venue}</div>
+                          <div className="mobile-session-section">{formatSubclass(session.courseCode, session.section)} · {session.venue}</div>
                           <div className="mobile-session-time">
                             {formatTime(session.startTime)} - {formatTime(session.endTime)}
                           </div>

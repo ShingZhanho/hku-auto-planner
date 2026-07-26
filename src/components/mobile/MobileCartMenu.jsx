@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BlockoutModal from '../BlockoutModal';
 import './MobileCartMenu.css';
+import { formatSubclass } from '../../utils/campusUtils';
 
 function MobileCartMenu({ 
   isOpen, 
@@ -71,7 +72,9 @@ function MobileCartMenu({
                         <p className="cart-course-title">{course.courseTitle}</p>
                       )}
                       <p className="cart-course-sections">
-                        {course.selectedSections?.length || 0} subclass(es) selected
+                        {(course.selectedSections || [])
+                          .map(section => formatSubclass(course.courseCode, section))
+                          .join(', ')}
                       </p>
                     </div>
                     <div className="cart-course-actions">

@@ -9,9 +9,17 @@ import BlockoutModal from './components/BlockoutModal'
 import CalendarExportModal from './components/CalendarExportModal'
 import ThemeToggle from './components/ThemeToggle'
 import IncompatibilityDialog from './components/IncompatibilityDialog'
+import ShanghaiCampusWarning from './components/ShanghaiCampusWarning'
 import { processCoursesData, generateSchedules } from './utils/courseParser'
 import { analyzeIncompatibilities } from './utils/conflictAnalyzer'
-import { hashCourseData, saveShoppingCart, loadShoppingCart } from './utils/storageUtils'
+import { isShanghaiSubclass } from './utils/campusUtils'
+import {
+  hashCourseData,
+  saveShoppingCart,
+  loadShoppingCart,
+  loadShanghaiWarningAcknowledgement,
+  saveShanghaiWarningAcknowledgement
+} from './utils/storageUtils'
 
 function App() {
   const [isMobile, setIsMobile] = useState(false);
@@ -23,6 +31,8 @@ function App() {
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [conflictReport, setConflictReport] = useState(null);
+  const [shanghaiWarning, setShanghaiWarning] = useState(null);
+  const [hasAcknowledgedShanghaiWarning, setHasAcknowledgedShanghaiWarning] = useState(false);
   const [blockouts, setBlockouts] = useState([]);
   const [isBlockoutModalOpen, setIsBlockoutModalOpen] = useState(false);
   const [editingBlockout, setEditingBlockout] = useState(null);
@@ -139,6 +149,8 @@ function App() {
         });
       }
     }
+    setHasAcknowledgedShanghaiWarning(loadShanghaiWarningAcknowledgement(hash));
+    setShanghaiWarning(null);
     
     if (import.meta.env.DEV) {
       console.log('Course data loaded and processed');
@@ -150,6 +162,20 @@ function App() {
   };
 
   const handleCourseSelect = (course, selectedSections) => {
+    const previouslySelected = selectedCourses.find(c => c.courseCode === course.courseCode)?.selectedSections || [];
+    const newlySelectedShanghaiSections = selectedSections.filter(section => (
+      isShanghaiSubclass(course.courseCode, section) && !previouslySelected.includes(section)
+    ));
+
+    if (!hasAcknowledgedShanghaiWarning && newlySelectedShanghaiSections.length > 0) {
+      setShanghaiWarning({
+        courseCode: course.courseCode,
+        sections: newlySelectedShanghaiSections
+      });
+      setHasAcknowledgedShanghaiWarning(true);
+      saveShanghaiWarningAcknowledgement(dataHash);
+    }
+
     setSelectedCourses(prev => {
       // Remove if already exists
       const filtered = prev.filter(c => c.courseCode !== course.courseCode);
@@ -555,6 +581,12 @@ function App() {
           setConflictReport(null);
           setIsOverloadModalOpen(true);
         }}
+      />
+
+      <ShanghaiCampusWarning
+        warning={shanghaiWarning}
+        variant="desktop"
+        onClose={() => setShanghaiWarning(null)}
       />
     </div>
   )

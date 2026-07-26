@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import './SolutionsList.css';
+import { formatSubclass } from '../utils/campusUtils';
 
 function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
   // Check if a course has valid sessions
@@ -84,7 +85,7 @@ function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
               <ul>
                 {sem1Courses.map((course, idx) => (
                   <li key={idx}>
-                    <strong>{course.courseCode}<sup>{!hasValidSessions(course) ? '#' : ''}</sup></strong> - {course.section}
+                    <strong>{course.courseCode}<sup>{!hasValidSessions(course) ? '#' : ''}</sup></strong> - {formatSubclass(course.courseCode, course.section)}
                   </li>
                 ))}
               </ul>
@@ -96,7 +97,7 @@ function SolutionsList({ plans, selectedIndex, onSelectPlan }) {
               <ul>
                 {sem2Courses.map((course, idx) => (
                   <li key={idx}>
-                    <strong>{course.courseCode}<sup>{!hasValidSessions(course) ? '#' : ''}</sup></strong> - {course.section}
+                    <strong>{course.courseCode}<sup>{!hasValidSessions(course) ? '#' : ''}</sup></strong> - {formatSubclass(course.courseCode, course.section)}
                   </li>
                 ))}
               </ul>

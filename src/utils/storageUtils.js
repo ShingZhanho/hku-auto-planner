@@ -32,6 +32,33 @@ export const hashCourseData = (jsonData) => {
   return hashString(dataString);
 };
 
+const SHANGHAI_WARNING_KEY = 'hku_planner_shanghai_warning';
+
+export const loadShanghaiWarningAcknowledgement = (currentDataHash) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SHANGHAI_WARNING_KEY) || 'null');
+    return Boolean(saved?.acknowledged && saved.dataHash === currentDataHash);
+  } catch {
+    localStorage.removeItem(SHANGHAI_WARNING_KEY);
+    return false;
+  }
+};
+
+export const saveShanghaiWarningAcknowledgement = (dataHash) => {
+  try {
+    localStorage.setItem(SHANGHAI_WARNING_KEY, JSON.stringify({
+      dataHash,
+      acknowledged: true
+    }));
+  } catch {
+    // The warning still appears for the current session if storage is unavailable.
+  }
+};
+
+export const clearShanghaiWarningAcknowledgement = () => {
+  localStorage.removeItem(SHANGHAI_WARNING_KEY);
+};
+
 /**
  * Set a cookie
  */
@@ -158,10 +185,10 @@ export const clearShoppingCart = () => {
   deleteCookie('hku_planner_hash');
   deleteCookie('hku_planner_cart'); // Clean up old cookie data if it exists
   localStorage.removeItem('hku_planner_cart');
+  clearShanghaiWarningAcknowledgement();
   
   if (import.meta.env.DEV) {
     console.log('Shopping cart cleared from storage');
   }
 };
-
 
