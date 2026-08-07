@@ -1,5 +1,38 @@
 import ExcelJS from 'exceljs';
 
+const TIME_HEADERS = new Set(['START TIME', 'END TIME']);
+const DATE_HEADERS = new Set(['START DATE', 'END DATE']);
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const formatTimeFromMinutes = (minutes) => {
+  const hours = Math.floor(minutes / 60) % 24;
+  const remainingMinutes = minutes % 60;
+  return `${hours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+};
+
+export const normalizeExcelCellValue = (value, header) => {
+  const normalizedHeader = header.trim();
+
+  if (value instanceof Date) {
+    if (TIME_HEADERS.has(normalizedHeader)) {
+      return formatTimeFromMinutes(value.getUTCHours() * 60 + value.getUTCMinutes());
+    }
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    if (TIME_HEADERS.has(normalizedHeader)) {
+      return formatTimeFromMinutes(Math.round(value * 24 * 60));
+    }
+
+    if (DATE_HEADERS.has(normalizedHeader)) {
+      return new Date(Date.UTC(1899, 11, 30) + value * MILLISECONDS_PER_DAY);
+    }
+  }
+
+  return value !== null && value !== undefined ? String(value) : '';
+};
+
 
 
 /**
@@ -31,19 +64,7 @@ const worksheetToJSON = (worksheet) => {
           value = value.result;
         }
         
-        // For time columns, check if it's a Date object and extract time in HH:MM format
-        // This avoids timezone issues with Excel's date serial numbers
-        if (value instanceof Date && (header.includes('TIME') || header.includes('TIME'))) {
-          // Store as HH:MM string to avoid timezone confusion
-          const hours = value.getUTCHours();
-          const minutes = value.getUTCMinutes();
-          obj[header] = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        } else if (value instanceof Date) {
-          // Keep other Date objects (like dates) as-is
-          obj[header] = value;
-        } else {
-          obj[header] = value !== null && value !== undefined ? String(value) : '';
-        }
+        obj[header] = normalizeExcelCellValue(value, header);
       });
       rows.push(obj);
     }
