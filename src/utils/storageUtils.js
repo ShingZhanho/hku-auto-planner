@@ -55,6 +55,7 @@ export const createCourseHashGetter = (groupedData) => {
 };
 
 const SHANGHAI_WARNING_KEY = 'hku_planner_shanghai_warning';
+const PARTIAL_WEEK_NOTICE_KEY = 'hku_planner_partial_week_notice';
 
 export const loadShanghaiWarningAcknowledgement = () => {
   try {
@@ -78,6 +79,26 @@ export const saveShanghaiWarningAcknowledgement = () => {
 
 export const clearShanghaiWarningAcknowledgement = () => {
   localStorage.removeItem(SHANGHAI_WARNING_KEY);
+};
+
+export const loadPartialWeekNoticeAcknowledgement = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PARTIAL_WEEK_NOTICE_KEY) || 'null');
+    return Boolean(saved?.acknowledged);
+  } catch {
+    localStorage.removeItem(PARTIAL_WEEK_NOTICE_KEY);
+    return false;
+  }
+};
+
+export const savePartialWeekNoticeAcknowledgement = () => {
+  try {
+    localStorage.setItem(PARTIAL_WEEK_NOTICE_KEY, JSON.stringify({
+      acknowledged: true
+    }));
+  } catch {
+    // The notice still appears for the current session if storage is unavailable.
+  }
 };
 
 /**

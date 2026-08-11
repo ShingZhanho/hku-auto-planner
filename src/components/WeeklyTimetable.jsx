@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, memo } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../utils/courseParser';
 import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../utils/calendarUtils';
 import { formatSubclass } from '../utils/campusUtils';
+import { loadPartialWeekNoticeAcknowledgement, savePartialWeekNoticeAcknowledgement } from '../utils/storageUtils';
 import './WeeklyTimetable.css';
 
 function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) {
@@ -21,7 +22,9 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
   
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
   const [selectedSemester, setSelectedSemester] = useState(firstAvailableSemester);
-  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(false);
+  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(
+    loadPartialWeekNoticeAcknowledgement
+  );
   
   // Auto-switch to available semester if current selection has no courses
   useEffect(() => {
@@ -258,7 +261,6 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
                       if (!isDisabled) {
                         setSelectedSemester(semester);
                         setCurrentWeekIndex(0);
-                        setIsPartialWeekNoticeDismissed(false);
                       }
                     }}
                     disabled={isDisabled}
@@ -306,7 +308,10 @@ function WeeklyTimetable({ schedule, availableSemesters = [], blockouts = [] }) 
             </div>
             <button
               type="button"
-              onClick={() => setIsPartialWeekNoticeDismissed(true)}
+              onClick={() => {
+                savePartialWeekNoticeAcknowledgement();
+                setIsPartialWeekNoticeDismissed(true);
+              }}
               aria-label="Dismiss partial week message"
             >
               ×

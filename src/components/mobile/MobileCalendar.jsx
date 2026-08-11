@@ -2,12 +2,15 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { getScheduleDateRange, getWeekNumbers, isSessionInWeek, timeToMinutes, formatTime } from '../../utils/courseParser';
 import { formatSemesterStart, shouldSkipPartialFirstWeek } from '../../utils/calendarUtils';
 import { formatSubclass } from '../../utils/campusUtils';
+import { loadPartialWeekNoticeAcknowledgement, savePartialWeekNoticeAcknowledgement } from '../../utils/storageUtils';
 import './MobileCalendar.css';
 
 function MobileCalendar({ schedule, blockouts, onExport }) {
   const [selectedSemester, setSelectedSemester] = useState(null);
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(false);
+  const [isPartialWeekNoticeDismissed, setIsPartialWeekNoticeDismissed] = useState(
+    loadPartialWeekNoticeAcknowledgement
+  );
   const gridRef = useRef(null);
 
   // Filter schedule by selected semester and only include courses with valid sessions
@@ -195,7 +198,6 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
               onClick={() => {
                 setSelectedSemester(semester);
                 setCurrentWeekIndex(0);
-                setIsPartialWeekNoticeDismissed(false);
               }}
             >
               {semester.replace(/^\d{4}-\d{2}\s*/, '')}
@@ -236,7 +238,10 @@ function MobileCalendar({ schedule, blockouts, onExport }) {
             </div>
             <button
               type="button"
-              onClick={() => setIsPartialWeekNoticeDismissed(true)}
+              onClick={() => {
+                savePartialWeekNoticeAcknowledgement();
+                setIsPartialWeekNoticeDismissed(true);
+              }}
               aria-label="Dismiss partial week message"
             >
               ×

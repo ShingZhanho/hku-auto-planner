@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createCourseHashGetter,
+  loadPartialWeekNoticeAcknowledgement,
   loadShoppingCart,
+  savePartialWeekNoticeAcknowledgement,
   saveShoppingCart
 } from '../src/utils/storageUtils.js';
 
@@ -83,4 +85,14 @@ test('migrates legacy carts without discarding available courses', () => {
 
   assert.deepEqual(restored.selectedCourses.map(course => course.courseCode), ['COMP1000']);
   assert.deepEqual(restored.removedCourses, []);
+});
+
+test('persists acknowledgement of the partial first-week notice', () => {
+  globalThis.localStorage = createStorage();
+
+  assert.equal(loadPartialWeekNoticeAcknowledgement(), false);
+
+  savePartialWeekNoticeAcknowledgement();
+
+  assert.equal(loadPartialWeekNoticeAcknowledgement(), true);
 });
